@@ -30,7 +30,7 @@ docker run -p 8000:80 --env-file .env ai-support-agent
 ```
 
 Project Layout (top-level)
-
+```
 ai-support-agent/
 ├── .env.example             # example environment variables
 ├── .gitignore
@@ -40,7 +40,7 @@ ai-support-agent/
 ├── docker-compose.yml
 ├── pyproject.toml
 ├── main.py                  # app entrypoint
-
+```
 High-level packages
 
 - `app/` — HTTP layer, routers, middleware, pydantic schemas, dependency wiring.
@@ -86,11 +86,3 @@ Next steps / TODO
 - Wire agents into `orchestration/router.py` and build `execution/dispatcher.py` flows.
 - Add test coverage under `tests/unit` for domain logic and `tests/integration` for end-to-end flows.
 - Configure CI to run linting and tests.
-
-Contacts & Resources
--	This scaffold is intended to be adapted — rename modules to fit product conventions. If you want, I can:
-  - add a minimal `docker-compose` dev stack (Postgres, Redis)
-  - implement a simple `llm/providers/openai.py` adapter and a sample agent flow
-
-License
--	Add your preferred license file.
