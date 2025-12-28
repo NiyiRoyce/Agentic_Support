@@ -1,0 +1,1 @@
+# freshness rules for retrieval

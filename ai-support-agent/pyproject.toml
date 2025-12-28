@@ -1,0 +1,16 @@
+[tool.poetry]
+name = "ai-support-agent"
+version = "0.1.0"
+description = "Scaffolded AI support agent"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+fastapi = "*"
+uvicorn = {extras = ["standard"], version = "*"}
+httpx = "*"
+pydantic = "*"
+python-dotenv = "*"
+
+[tool.poetry.dev-dependencies]
+pytest = "*"
+pytest-asyncio = "*"

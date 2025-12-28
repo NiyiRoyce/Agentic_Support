@@ -1,0 +1,1 @@
+# shopify client wrapper (stub)

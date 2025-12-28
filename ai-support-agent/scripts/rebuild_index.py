@@ -1,0 +1,1 @@
+# rebuild vector index script
