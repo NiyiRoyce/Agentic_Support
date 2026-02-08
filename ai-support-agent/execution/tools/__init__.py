@@ -1,1 +1,1 @@
-# tools package
+# External system interfaces

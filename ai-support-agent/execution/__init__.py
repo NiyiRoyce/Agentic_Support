@@ -1,1 +1,1 @@
-# execution package
+# Deterministic action execution

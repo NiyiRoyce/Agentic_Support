@@ -1,1 +1,1 @@
-# workflows package
+# External orchestration (n8n)
