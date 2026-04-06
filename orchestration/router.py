@@ -20,6 +20,7 @@ from agents import (
 from agents.base import AgentContext
 from llm import LLMRouter
 from memory import MemoryManager
+from knowledge.retrieval import KnowledgeRetriever
 
 
 class OrchestrationRouter:
@@ -41,6 +42,7 @@ class OrchestrationRouter:
         llm_router: LLMRouter,
         memory_manager: Optional[MemoryManager] = None,
         policy_manager: Optional[PolicyManager] = None,
+        knowledge_retriever: Optional[KnowledgeRetriever] = None,
     ):
         """
         Initialize orchestration router.
@@ -49,10 +51,12 @@ class OrchestrationRouter:
             llm_router: LLM router for agents
             memory_manager: Optional memory manager
             policy_manager: Optional policy manager
+            knowledge_retriever: Optional knowledge retriever for RAG
         """
         self.llm_router = llm_router
         self.memory_manager = memory_manager
         self.policy_manager = policy_manager or PolicyManager()
+        self.knowledge_retriever = knowledge_retriever
         
         # Initialize agents
         self.intent_agent = IntentAgent(llm_router)
@@ -291,28 +295,41 @@ class OrchestrationRouter:
         context: OrchestrationContext,
         action,
     ) -> Dict:
-        """Execute data fetch (mock implementation)."""
-        # In production, this would call actual services
-        # For now, return mock data
-        
-        if action.component == "knowledge_base":
-            return {
-                "success": True,
-                "data": {
-                    "chunks": ["Mock knowledge base content..."],
+        """Execute data fetch."""
+        try:
+            if action.component == "knowledge_base":
+                if not self.knowledge_retriever:
+                    # Fallback to mock data if no retriever
+                    return {
+                        "success": True,
+                        "data": {
+                            "chunks": ["Mock knowledge base content - RAG not configured"],
+                        }
+                    }
+                
+                # Retrieve relevant knowledge
+                query = context.user_message
+                chunks = await self.knowledge_retriever.retrieve(query)
+                
+                return {
+                    "success": True,
+                    "data": {
+                        "chunks": chunks,
+                    }
                 }
-            }
-        elif action.component == "shopify":
-            return {
-                "success": True,
-                "data": {
-                    "order_id": action.parameters.get("order_id"),
-                    "status": "shipped",
-                    "tracking": "TRACK123",
+            elif action.component == "shopify":
+                return {
+                    "success": True,
+                    "data": {
+                        "order_id": action.parameters.get("order_id"),
+                        "status": "shipped",
+                        "tracking": "TRACK123",
+                    }
                 }
-            }
-        else:
-            return {"success": True, "data": {}}
+            else:
+                return {"success": True, "data": {}}
+        except Exception as e:
+            return {"success": False, "error": f"Data fetch failed: {str(e)}"}
     
     async def _execute_response_generation(
         self,

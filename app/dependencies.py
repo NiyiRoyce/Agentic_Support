@@ -8,6 +8,9 @@ from functools import lru_cache
 from llm import LLMRouter, OpenAIProvider, AnthropicProvider, RouteConfig, RoutingStrategy
 from memory import MemoryManager, InMemoryStore, RedisStore
 from orchestration import OrchestrationRouter, PolicyManager
+from knowledge.vector_store import ChromaVectorStore
+from knowledge.embeddings import OpenAIEmbedder
+from knowledge.retrieval import KnowledgeRetriever
 from config import settings
 
 
@@ -15,6 +18,7 @@ from config import settings
 _llm_router: Optional[LLMRouter] = None
 _memory_manager: Optional[MemoryManager] = None
 _orchestration_router: Optional[OrchestrationRouter] = None
+_knowledge_retriever: Optional[KnowledgeRetriever] = None
 
 
 @lru_cache()
@@ -101,6 +105,39 @@ def get_memory_manager() -> MemoryManager:
 
 
 @lru_cache()
+def get_knowledge_retriever() -> KnowledgeRetriever:
+    """
+    Get or create knowledge retriever instance.
+    
+    Returns:
+        KnowledgeRetriever instance
+    """
+    global _knowledge_retriever
+    
+    if _knowledge_retriever is None:
+        # Initialize vector store
+        vector_store = ChromaVectorStore(
+            persist_directory=settings.rag_vector_store_path
+        )
+        
+        # Initialize embedder
+        if not settings.openai_api_key:
+            raise RuntimeError("OpenAI API key required for embeddings")
+        
+        embedder = OpenAIEmbedder(api_key=settings.openai_api_key)
+        
+        # Create retriever
+        _knowledge_retriever = KnowledgeRetriever(
+            vector_store=vector_store,
+            embedder=embedder,
+            max_results=settings.rag_max_results,
+            score_threshold=settings.rag_score_threshold,
+        )
+    
+    return _knowledge_retriever
+
+
+@lru_cache()
 def get_orchestration_router() -> OrchestrationRouter:
     """
     Get or create orchestration router instance.
@@ -115,6 +152,7 @@ def get_orchestration_router() -> OrchestrationRouter:
             llm_router=get_llm_router(),
             memory_manager=get_memory_manager(),
             policy_manager=PolicyManager(),
+            knowledge_retriever=get_knowledge_retriever(),
         )
     
     return _orchestration_router

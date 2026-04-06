@@ -1,0 +1,51 @@
+# AI Support Agent Documentation
+
+## Getting Started
+
+Welcome to the AI Support Agent! This system provides intelligent customer support through natural language processing and knowledge retrieval.
+
+### Features
+
+- **Intent Classification**: Automatically understands user intent from messages
+- **Knowledge Retrieval**: Searches through documentation to provide accurate answers
+- **Multi-Agent Architecture**: Different specialized agents handle different types of requests
+- **Memory Management**: Maintains conversation context across interactions
+- **External Integrations**: Connects to helpdesk, order management, and notification systems
+
+### How It Works
+
+1. User sends a message
+2. System classifies the intent (question, order inquiry, complaint, etc.)
+3. Relevant agent processes the request
+4. Knowledge base is searched for relevant information
+5. Response is generated and sent back
+
+### API Usage
+
+The system provides a REST API for integration:
+
+```
+POST /api/v1/chat
+{
+  "message": "How do I reset my password?",
+  "user_id": "user123",
+  "session_id": "session456"
+}
+```
+
+### Configuration
+
+Set the following environment variables:
+
+- `OPENAI_API_KEY`: Your OpenAI API key for LLM and embeddings
+- `APP_ENV`: Environment (development/production)
+- `RAG_VECTOR_STORE_PATH`: Path to store vector embeddings
+
+### Deployment
+
+The system can be deployed using Docker:
+
+```bash
+docker build -t ai-support-agent .
+docker run -p 8000:80 --env-file .env ai-support-agent
+```
