@@ -1,6 +1,7 @@
 """Health check endpoints."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.responses import PlainTextResponse
 from datetime import datetime
 import asyncio
 import logging
@@ -13,6 +14,7 @@ from app.dependencies import (
     get_orchestration_router,
 )
 from config import settings
+from observability.metrics import get_metrics
 
 router = APIRouter()
 logger = logging.getLogger(__name__)
@@ -48,6 +50,20 @@ async def health_check() -> HealthResponse:
         version=settings.app_version,
         environment=settings.app_env,
     )
+
+
+@router.get(
+    "/metrics",
+    response_class=PlainTextResponse,
+    summary="Prometheus metrics",
+    description="Exposes application metrics in Prometheus format",
+    tags=["Health"],
+)
+async def metrics() -> str:
+    """
+    Prometheus metrics endpoint.
+    """
+    return get_metrics()
 
 
 @router.get(

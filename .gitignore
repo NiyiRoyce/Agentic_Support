@@ -10,3 +10,24 @@ venv/
 .vscode/
 *.db
 */__pycache__
+
+# Security-sensitive files
+*.pem
+*.key
+*.crt
+*.pfx
+*.p12
+*.jks
+secrets.yaml
+secrets.json
+credentials.json
+service-account-key.json
+.aws/
+.gcp/
+
+# IDE and system files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~

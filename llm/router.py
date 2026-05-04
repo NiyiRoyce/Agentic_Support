@@ -15,6 +15,8 @@ from llm.providers.base import (
 )
 from llm.providers.openai import OpenAIProvider
 from llm.providers.anthropic import AnthropicProvider
+from observability.cost_tracker import track_llm_response
+from observability.metrics import increment_llm_request_count
 
 
 class RoutingStrategy(str, Enum):
@@ -80,6 +82,11 @@ class LLMRouter:
 
                 if response.success:
                     self._record_success(provider_name)
+                    
+                    # Track metrics and cost
+                    increment_llm_request_count(provider_name.value, response.model)
+                    track_llm_response(provider_name.value, response.model, response)
+                    
                     return response
                 else:
                     last_error = response.error

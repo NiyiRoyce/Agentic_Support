@@ -7,6 +7,8 @@ from starlette.requests import Request
 import logging
 import time
 
+from observability.metrics import increment_request_count, observe_request_duration
+
 logger = logging.getLogger(__name__)
 
 
@@ -33,5 +35,9 @@ class LoggingMiddleware(BaseHTTPMiddleware):
             f"[{request_id}] "
             f"({duration:.3f}s)"
         )
+        
+        # Update metrics
+        increment_request_count(request.method, request.url.path, response.status_code)
+        observe_request_duration(request.method, request.url.path, duration)
         
         return response

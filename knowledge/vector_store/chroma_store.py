@@ -126,3 +126,42 @@ class ChromaVectorStore(VectorStore):
         except Exception as e:
             print(f"Error clearing collection: {e}")
             return False
+
+    async def get_all_documents(self) -> List[Document]:
+        """Get all documents in the store."""
+        try:
+            results = await asyncio.get_event_loop().run_in_executor(
+                None,
+                lambda: self.collection.get(include=["documents", "metadatas", "embeddings"])
+            )
+
+            documents = []
+            if results["ids"]:
+                for i, doc_id in enumerate(results["ids"]):
+                    doc = Document(
+                        id=doc_id,
+                        content=results["documents"][i],
+                        metadata=results["metadatas"][i],
+                        embedding=results["embeddings"][i] if results["embeddings"] else None,
+                    )
+                    documents.append(doc)
+
+            return documents
+        except Exception as e:
+            print(f"Error getting all documents: {e}")
+            return []
+
+    async def update_embeddings(self, documents: List[Document]) -> bool:
+        """Update embeddings for existing documents."""
+        try:
+            ids = [doc.id for doc in documents]
+            embeddings = [doc.embedding for doc in documents if doc.embedding]
+
+            await asyncio.get_event_loop().run_in_executor(
+                None,
+                lambda: self.collection.update(ids=ids, embeddings=embeddings)
+            )
+            return True
+        except Exception as e:
+            print(f"Error updating embeddings: {e}")
+            return False

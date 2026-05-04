@@ -6,6 +6,16 @@ Overview
 -	Purpose: Provide a modular, production-minded Python/ FastAPI project layout for building conversational support agents that orchestrate LLMs, knowledge retrieval (RAG), and external tools (Shopify, Helpdesk, Notifications).
 -	Goals: clear separation of concerns, testable agents, pluggable LLM providers, and observability.
 
+## Documentation
+
+- [Architecture](docs/architecture.md) - System design and components
+- [API Reference](docs/api.md) - API endpoints and schemas
+- [Deployment](docs/deployment.md) - Production deployment guide
+- [Monitoring](docs/monitoring.md) - Observability and alerting
+- [Incident Response](docs/incident_response.md) - Incident handling procedures
+- [Cost Management](docs/cost_management.md) - Cost monitoring and optimization
+- [Technical Design](docs/TECHNICAL_DESIGN.md) - Detailed technical specifications
+
 Quickstart
 -	Copy environment variables from `.env.example` to `.env` and set secrets (e.g., `OPENAI_API_KEY`).
 -	Install dependencies:

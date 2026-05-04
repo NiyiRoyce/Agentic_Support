@@ -3,15 +3,16 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
-import logging
 
 from app.api import chat, health, sessions, webhooks
 from app.middleware.logging import LoggingMiddleware
 from app.middleware.request_context import RequestContextMiddleware
 from app.middleware.rate_limit import RateLimitMiddleware
-from config import settings
+from config.settings import settings
+from observability.logger import configure_logging, get_logger
+from observability.tracer import configure_tracing, instrument_fastapi
 
-logger = logging.getLogger(__name__)
+logger = get_logger(__name__)
 
 
 def create_app() -> FastAPI:
@@ -28,6 +29,9 @@ def create_app() -> FastAPI:
         docs_url="/docs" if settings.debug else None,
         redoc_url="/redoc" if settings.debug else None,
     )
+    
+    # Instrument FastAPI with OpenTelemetry
+    instrument_fastapi(app)
     
     # Configure CORS
     app.add_middleware(
@@ -66,9 +70,23 @@ def create_app() -> FastAPI:
     # Startup event
     @app.on_event("startup")
     async def startup_event():
+        # Configure structured logging
+        configure_logging(settings.log_level)
+        
+        # Configure OpenTelemetry tracing
+        configure_tracing(settings.otlp_endpoint)
+        
         logger.info(f"Starting {settings.app_name} in {settings.app_env} mode")
         
-        # Validate configuration
+        # Validate production configuration
+        try:
+            settings.validate_production()
+            logger.info("Production configuration validated successfully")
+        except ValueError as e:
+            logger.error(f"Production configuration error: {e}")
+            raise
+        
+        # Validate LLM configuration
         try:
             settings.validate_llm_config()
             logger.info("LLM configuration validated successfully")

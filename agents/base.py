@@ -210,7 +210,7 @@ class BaseAgent(ABC):
                 schema,
             )
             if is_valid:
-                return True, parsed.dict(), None
+                return True, parsed.model_dump(), None
             return False, None, error
         else:
             is_valid, parsed, error = self.json_validator.validate_json(
