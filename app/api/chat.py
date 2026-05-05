@@ -1,7 +1,6 @@
 """Chat endpoint for processing user messages."""
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from typing import Optional
 import logging
 
 from app.schemas.request import ChatRequest

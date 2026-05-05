@@ -1,5 +1,5 @@
 # shopify products helper
-v"""Shopify product tools"""
+"""Shopify product tools"""
 from typing import Dict, Any, Optional
 from datetime import datetime
 import logging

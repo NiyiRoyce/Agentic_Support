@@ -2,7 +2,6 @@
 """OpenAI embeddings implementation."""
 
 from typing import List
-import openai
 from openai import AsyncOpenAI
 
 from knowledge.embeddings.base import Embedder

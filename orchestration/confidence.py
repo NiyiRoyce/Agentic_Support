@@ -1,7 +1,7 @@
 # confidence scoring utilities
 """Confidence scoring and aggregation for orchestration decisions."""
 
-from typing import Dict, List, Optional
+from typing import Dict, Optional
 from dataclasses import dataclass
 from enum import Enum
 

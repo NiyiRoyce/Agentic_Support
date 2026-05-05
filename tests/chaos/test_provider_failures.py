@@ -2,14 +2,13 @@
 
 import pytest
 import asyncio
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock
 
 from llm import LLMRouter, LLMProvider
 from llm.providers.mock import MockLLMProvider
 from agents.intent.agent import IntentAgent
 from agents.base import AgentContext
-from orchestration.router import OrchestrationRouter
-from config import settings
+
 
 
 @pytest.fixture
@@ -50,10 +49,8 @@ async def test_llm_router_fallback_on_failure():
 
     working_fallback = MockLLMProvider()
     working_fallback.add_response('{"response": "Fallback response"}')
-    original_fallback_complete = working_fallback.complete
-    working_fallback.complete = AsyncMock(side_effect=original_fallback_complete)
 
-    from llm.router import RouteConfig, RoutingStrategy
+    from llm.router import RouteConfig
 
     router = LLMRouter({
         LLMProvider.OPENAI: failing_primary,
@@ -68,14 +65,12 @@ async def test_llm_router_fallback_on_failure():
     from llm import LLMMessage, LLMConfig
 
     messages = [LLMMessage(role="user", content="Hello")]
-    llm_config = LLMConfig(model="test")
 
     response = await router.complete(messages, route_config=config)
 
+    # Verify fallback worked by checking the response
     assert response.success
     assert "Fallback response" in response.content
-    # Verify fallback was called
-    working_fallback.complete.assert_called()
 
 
 @pytest.mark.asyncio

@@ -2,6 +2,7 @@
 
 from agents.base import BaseAgent, AgentContext, AgentResult, AgentType
 from agents.escalation.schemas import EscalationAgentOutput
+from agents.escalation.prompts import EscalationPrompts
 from llm import LLMRouter, LLMMessage, LLMConfig
 
 

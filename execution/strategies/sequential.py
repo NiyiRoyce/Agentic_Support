@@ -1,6 +1,6 @@
 # Execute tools sequentially
 """Sequential execution strategy"""
-from typing import List, Optional
+from typing import List
 import logging
 
 from execution.models import ToolCall, ToolResult

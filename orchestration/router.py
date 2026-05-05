@@ -5,19 +5,18 @@ from typing import Optional, Dict, Any
 import time
 
 from orchestration.context import OrchestrationContext, ContextBuilder
-from orchestration.confidence import ConfidenceAggregator, ConfidencePolicy
+from orchestration.confidence import ConfidenceAggregator
 from orchestration.ambiguity import AmbiguityResolver
-from orchestration.execution_plan import ExecutionPlanBuilder, ExecutionPlan, ActionStatus
-from orchestration.policies import PolicyManager, PolicyDecision
+from orchestration.execution_plan import ExecutionPlanBuilder, ExecutionPlan
+from orchestration.policies import PolicyManager
 
 from agents import (
     IntentAgent,
     KnowledgeAgent,
     OrdersAgent,
-    TicketsAgent,
+    TicketAgent,
     EscalationAgent,
 )
-from agents.base import AgentContext
 from llm import LLMRouter
 from memory import MemoryManager
 from knowledge.retrieval import KnowledgeRetriever

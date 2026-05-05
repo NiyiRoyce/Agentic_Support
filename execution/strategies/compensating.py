@@ -1,6 +1,6 @@
 # Compensating transactions (rollback)
 """Compensating transaction strategy (Saga pattern)"""
-from typing import List, Dict, Optional, Callable, Any
+from typing import List, Dict, Optional, Any
 import logging
 
 from execution.models import ToolCall, ToolResult

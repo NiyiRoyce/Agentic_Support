@@ -1,7 +1,7 @@
 """Prometheus metrics collection."""
 
 from prometheus_client import Counter, Histogram, Gauge, generate_latest
-from typing import Optional
+
 
 
 # Request metrics

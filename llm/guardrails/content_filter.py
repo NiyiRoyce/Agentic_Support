@@ -124,7 +124,7 @@ class ContentFilter:
                 import json
                 json.loads(content)
                 return True
-            except:
+            except (json.JSONDecodeError, ValueError, TypeError):
                 return False
 
         elif expected_format == "markdown":

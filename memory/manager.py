@@ -9,7 +9,6 @@ from memory.store import (
     BaseMemoryStore,
     ConversationMessage,
     ConversationSession,
-    InMemoryStore,
 )
 from memory.summarizer import ConversationSummarizer, SummaryCache
 from memory.validators import (

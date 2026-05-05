@@ -2,6 +2,7 @@
 
 from agents.base import BaseAgent, AgentContext, AgentResult, AgentType
 from agents.tickets.schemas import TicketAgentOutput
+from agents.tickets.prompts import TicketPrompts
 from llm import LLMRouter, LLMMessage, LLMConfig
 
 

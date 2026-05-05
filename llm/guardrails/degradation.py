@@ -173,7 +173,7 @@ class GracefulDegradation:
             result = await func(*args, **kwargs)
             self._record_success()
             return result
-        except Exception as e:
+        except Exception:
             self._record_failure()
             
             # If further degraded, use fallback

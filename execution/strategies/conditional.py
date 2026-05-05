@@ -98,8 +98,8 @@ class ConditionalStrategy:
     async def execute_switch(
         self,
         branches: List[Condition],
-        default: Optional[List[ToolCall]] = None,
         context: ExecutionContext,
+        default: Optional[List[ToolCall]] = None,
     ) -> List[ToolResult]:
         """
         Execute tools based on multiple conditions (switch-case)

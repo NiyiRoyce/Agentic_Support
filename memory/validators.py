@@ -2,7 +2,7 @@
 """Validators for memory operations."""
 
 from typing import List, Optional, Tuple
-from datetime import datetime, timedelta
+from datetime import datetime
 
 from memory.store import ConversationMessage, ConversationSession
 

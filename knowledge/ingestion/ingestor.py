@@ -2,7 +2,6 @@
 """Document ingestion service."""
 
 from typing import List, Dict, Any, Optional
-import os
 from pathlib import Path
 from datetime import datetime
 

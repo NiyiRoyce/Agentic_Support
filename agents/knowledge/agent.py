@@ -4,7 +4,6 @@
 from typing import Optional, List
 
 from agents.base import BaseAgent, AgentContext, AgentResult, AgentType
-from agents.knowledge.schemas import KnowledgeResponse
 from agents.knowledge.prompts import KnowledgePrompts
 from llm import LLMRouter, LLMMessage, LLMConfig
 

@@ -1,6 +1,5 @@
 """OpenAI LLM provider implementation."""
 
-import asyncio
 from typing import List, Optional
 import tiktoken
 from openai import AsyncOpenAI, OpenAIError

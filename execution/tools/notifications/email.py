@@ -1,6 +1,6 @@
 # email notifier
 """Email notification tool"""
-from typing import Dict, Any, Optional, List
+from typing import Dict, Any, Optional
 from datetime import datetime
 import smtplib
 from email.mime.text import MIMEText

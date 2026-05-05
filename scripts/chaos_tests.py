@@ -126,20 +126,11 @@ class ChaosTestSuite:
                 Exception("Provider unavailable")
             )
             
-            # Create router with fallback
-            router = LLMRouter({
+            # Create router with fallback (testing that router creation works)
+            _router = LLMRouter({
                 LLMProvider.OPENAI: primary_provider,
                 LLMProvider.ANTHROPIC: fallback_provider,
             })
-            
-            # Simulate request
-            from llm.router import RouteConfig
-            messages = [LLMMessage(role="user", content="Hello")]
-            config = LLMConfig(model="test")
-            route_config = RouteConfig(
-                primary_provider=LLMProvider.OPENAI,
-                fallback_providers=[LLMProvider.ANTHROPIC],
-            )
             
             # Should succeed with fallback
             passed = True
@@ -282,14 +273,13 @@ class ChaosTestSuite:
                 max_attempts=2,
                 initial_delay=0.1,
             )
-            executor = RetryExecutor(config)
+            # executor = RetryExecutor(config)  # Not used in this test
             
             async def slow_task():
                 await asyncio.sleep(1.0)
                 return "done"
             
             # Create a wrapped version with timeout
-            import signal
             
             try:
                 # Should handle this gracefully even if slow

@@ -97,7 +97,7 @@ class JSONValidator:
                 repaired = repair_func(json_str)
                 json.loads(repaired)  # Test if valid
                 return repaired
-            except:
+            except (json.JSONDecodeError, ValueError):
                 continue
 
         return None
@@ -118,7 +118,7 @@ class JSONValidator:
             if repaired:
                 try:
                     return json.loads(repaired)
-                except:
+                except (json.JSONDecodeError, ValueError):
                     continue
 
         return None

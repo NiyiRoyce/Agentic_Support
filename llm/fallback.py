@@ -2,10 +2,10 @@
 """Fallback strategies for LLM failures."""
 
 import asyncio
-from typing import List, Optional, Callable
+from typing import Optional, Callable
 from dataclasses import dataclass
 
-from llm.providers.base import LLMMessage, LLMResponse, LLMConfig
+from llm.providers.base import LLMResponse
 
 
 @dataclass

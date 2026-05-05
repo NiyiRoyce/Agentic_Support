@@ -1,6 +1,6 @@
 # Execute tools in parallel
 """Parallel execution strategy"""
-from typing import List, Optional
+from typing import List
 import asyncio
 import logging
 

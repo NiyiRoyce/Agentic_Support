@@ -1,6 +1,7 @@
 # orders agent (stub)
 
 from agents.base import BaseAgent, AgentContext, AgentResult, AgentType
+from agents.orders.prompts import OrderPrompts
 from llm import LLMRouter, LLMMessage, LLMConfig
 
 

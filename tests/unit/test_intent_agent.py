@@ -1,7 +1,7 @@
 """Unit tests for IntentAgent."""
 
 import pytest
-from unittest.mock import AsyncMock
+
 
 from agents.intent.agent import IntentAgent
 from agents.base import AgentContext, AgentResult

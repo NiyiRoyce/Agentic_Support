@@ -1,7 +1,7 @@
 """Structured logging configuration using structlog."""
 
 import structlog
-from typing import Any, Dict
+from typing import Any
 
 
 def configure_logging(level: str = "INFO") -> None:

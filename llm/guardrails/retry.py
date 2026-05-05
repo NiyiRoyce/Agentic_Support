@@ -107,7 +107,6 @@ class RetryHandler:
 
     def _should_retry(self, error: Exception) -> bool:
         """Determine if error is retryable."""
-        error_type = type(error)
 
         # Check no-retry list first (takes precedence)
         if self.config.no_retry_on_errors:
