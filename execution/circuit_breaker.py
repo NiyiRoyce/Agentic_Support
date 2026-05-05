@@ -7,8 +7,8 @@ disabling failing services to allow recovery.
 import asyncio
 from enum import Enum
 from dataclasses import dataclass, field
-from datetime import datetime, timedelta
-from typing import Optional, Callable, TypeVar, Generic, Dict, Any
+from datetime import datetime
+from typing import Optional, Callable, TypeVar, Generic, Dict
 import logging
 
 logger = logging.getLogger(__name__)
@@ -103,7 +103,7 @@ class CircuitBreaker(Generic[T]):
             result = await func(*args, **kwargs)
             await self._record_success()
             return result
-        except Exception as e:
+        except Exception:
             await self._record_failure()
             raise
 

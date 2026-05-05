@@ -1,12 +1,9 @@
 # circuit breaker implementation (stub)
 """Circuit breaker implementation for tool resilience"""
 from typing import Dict, Optional
-from datetime import datetime, timedelta
+from datetime import datetime
 from enum import Enum
 import asyncio
-from collections import defaultdict
-
-from execution.models import CircuitBreakerError
 
 
 class CircuitState(str, Enum):

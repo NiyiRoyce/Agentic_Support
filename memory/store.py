@@ -130,6 +130,9 @@ class InMemoryStore(BaseMemoryStore):
     
     async def save_session(self, session: ConversationSession) -> bool:
         """Save session to memory."""
+        if not isinstance(session, ConversationSession):
+            return False
+
         self._sessions[session.session_id] = session
         
         # Track user sessions
@@ -210,6 +213,8 @@ class RedisStore(BaseMemoryStore):
     
     async def save_session(self, session: ConversationSession) -> bool:
         """Save session to Redis."""
+        if not isinstance(session, ConversationSession):
+            raise TypeError("session must be a ConversationSession")
         client = await self._get_client()
         
         # Serialize session
@@ -332,6 +337,8 @@ class FileStore(BaseMemoryStore):
     
     async def save_session(self, session: ConversationSession) -> bool:
         """Save session to file."""
+        if not isinstance(session, ConversationSession):
+            raise TypeError("session must be a ConversationSession")
         try:
             # Save session
             with open(self._session_path(session.session_id), 'w') as f:

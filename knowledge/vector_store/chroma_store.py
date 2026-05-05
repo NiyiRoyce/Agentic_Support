@@ -136,13 +136,20 @@ class ChromaVectorStore(VectorStore):
             )
 
             documents = []
-            if results["ids"]:
-                for i, doc_id in enumerate(results["ids"]):
+            ids = results.get("ids") if isinstance(results, dict) else None
+            if ids is not None and hasattr(ids, '__len__') and len(ids) > 0:
+                # Normalize possible numpy arrays to lists
+                try:
+                    ids_iter = list(ids)
+                except Exception:
+                    ids_iter = ids
+
+                for i, doc_id in enumerate(ids_iter):
                     doc = Document(
                         id=doc_id,
                         content=results["documents"][i],
                         metadata=results["metadatas"][i],
-                        embedding=results["embeddings"][i] if results["embeddings"] else None,
+                        embedding=(results.get("embeddings")[i] if results.get("embeddings") else None),
                     )
                     documents.append(doc)
 

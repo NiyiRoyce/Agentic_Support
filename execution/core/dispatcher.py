@@ -19,7 +19,6 @@ from execution.models import (
     ExecutionStatus,
     ExecutionMode,
     ExecutionError,
-    ToolError,
 )
 from execution.safety import (
     CircuitBreaker,

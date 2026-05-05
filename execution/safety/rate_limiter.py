@@ -1,8 +1,7 @@
 # Rate limiting per tool
 """Rate limiting for tool executions"""
 from typing import Dict, Optional
-from datetime import datetime, timedelta
-from collections import deque
+from datetime import datetime
 import asyncio
 
 from execution.models import RateLimitError

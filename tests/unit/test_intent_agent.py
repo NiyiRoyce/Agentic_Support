@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock
 from agents.intent.agent import IntentAgent
 from agents.base import AgentContext, AgentResult
 from agents.intent.schemas import IntentType
-from llm import LLMRouter, LLMConfig, LLMMessage
+from llm import LLMRouter
 from llm.providers.mock import MockLLMProvider
 from llm.providers.base import LLMProvider
 

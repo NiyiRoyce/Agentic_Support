@@ -8,7 +8,6 @@ from execution.tools.base import BaseTool
 from execution.models import (
     ToolResult,
     ToolStatus,
-    ToolError,
     ValidationError,
     CircuitBreakerError,
     RateLimitError,

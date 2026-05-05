@@ -1,7 +1,7 @@
 """Request schemas."""
 
-from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, Field, validator
+from typing import Optional, Dict, Any
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ChatRequest(BaseModel):
@@ -11,15 +11,15 @@ class ChatRequest(BaseModel):
     session_id: Optional[str] = Field(None, description="Session identifier")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Additional metadata")
     
-    @validator("message")
+    @field_validator("message")
     def validate_message(cls, v):
         """Validate message is not just whitespace."""
         if not v or not v.strip():
             raise ValueError("Message cannot be empty or whitespace only")
         return v.strip()
-    
-    class Config:
-        schema_extra = {
+
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "message": "Where is my order #12345?",
                 "user_id": "user_123",
@@ -30,15 +30,16 @@ class ChatRequest(BaseModel):
                 }
             }
         }
+    )
 
 
 class CreateSessionRequest(BaseModel):
     """Request for creating a new session."""
     user_id: Optional[str] = Field(None, description="User identifier")
     metadata: Optional[Dict[str, Any]] = Field(None, description="Session metadata")
-    
-    class Config:
-        schema_extra = {
+
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "user_id": "user_123",
                 "metadata": {
@@ -48,15 +49,16 @@ class CreateSessionRequest(BaseModel):
                 }
             }
         }
+    )
 
 
 class UpdateSessionRequest(BaseModel):
     """Request for updating session metadata."""
     metadata: Dict[str, Any] = Field(..., description="Metadata to update")
     merge: bool = Field(True, description="Merge with existing metadata or replace")
-    
-    class Config:
-        schema_extra = {
+
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "metadata": {
                     "last_intent": "order_status",
@@ -65,6 +67,7 @@ class UpdateSessionRequest(BaseModel):
                 "merge": True
             }
         }
+    )
 
 
 class AddMessageRequest(BaseModel):

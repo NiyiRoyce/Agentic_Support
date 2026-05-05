@@ -1,6 +1,6 @@
 """Error schemas."""
 
-from typing import Optional, List, Dict, Any
+from typing import Optional
 from pydantic import BaseModel, Field
 
 

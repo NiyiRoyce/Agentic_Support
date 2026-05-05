@@ -1,53 +1,54 @@
 # central settings loader
-from dotenv import load_dotenv
-load_dotenv()
-
-from pydantic import Field, field_validator
+from pydantic import ConfigDict, Field
 from pydantic_settings import BaseSettings
 from typing import Optional, List
+
+from dotenv import load_dotenv
+load_dotenv()
 
 
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
+    model_config = ConfigDict(
+        env_file=".env",
+        case_sensitive=False,
+    )
+
     # App settings
     app_name: str = "AI Support Agent"
-    app_env: str = Field(default="development", env="APP_ENV")
-    debug: bool = Field(default=False, env="DEBUG")
-    api_key: Optional[str] = Field(default=None, env="API_KEY")
-    allowed_origins: List[str] = Field(default=[], env="ALLOWED_ORIGINS")
+    app_env: str = Field(default="development")
+    debug: bool = Field(default=False)
+    api_key: Optional[str] = Field(default=None)
+    allowed_origins: List[str] = Field(default=[])
 
     # Rate limiting
-    rate_limit_enabled: bool = Field(default=True, env="RATE_LIMIT_ENABLED")
-    rate_limit_requests_per_minute: int = Field(default=60, env="RATE_LIMIT_REQUESTS_PER_MINUTE")
+    rate_limit_enabled: bool = Field(default=True)
+    rate_limit_requests_per_minute: int = Field(default=60)
 
     # LLM settings
-    openai_api_key: Optional[str] = Field(default=None, env="OPENAI_API_KEY")
-    anthropic_api_key: Optional[str] = Field(default=None, env="ANTHROPIC_API_KEY")
-    default_model: str = Field(default="gpt-4o-mini", env="DEFAULT_MODEL")
-    fallback_model: str = Field(default="claude-3-haiku", env="FALLBACK_MODEL")
-    default_llm_provider: str = Field(default="openai", env="DEFAULT_LLM_PROVIDER")
-    fallback_provider: Optional[str] = Field(default="anthropic", env="FALLBACK_PROVIDER")
-    llm_routing_strategy: str = Field(default="cost", env="LLM_ROUTING_STRATEGY")
+    openai_api_key: Optional[str] = Field(default=None)
+    anthropic_api_key: Optional[str] = Field(default=None)
+    default_model: str = Field(default="gpt-4o-mini")
+    fallback_model: str = Field(default="claude-3-haiku")
+    default_llm_provider: str = Field(default="openai")
+    fallback_provider: Optional[str] = Field(default="anthropic")
+    llm_routing_strategy: str = Field(default="cost")
 
     # Memory settings
-    redis_url: Optional[str] = Field(default=None, env="REDIS_URL")
-    enable_rag: bool = Field(default=True, env="ENABLE_RAG")
+    redis_url: Optional[str] = Field(default=None)
+    enable_rag: bool = Field(default=True)
 
     # Knowledge base settings
-    rag_vector_store_path: str = Field(default="./vector_store", env="RAG_VECTOR_STORE_PATH")
-    rag_chunk_size: int = Field(default=1000, env="RAG_CHUNK_SIZE")
-    rag_chunk_overlap: int = Field(default=200, env="RAG_CHUNK_OVERLAP")
-    rag_max_results: int = Field(default=5, env="RAG_MAX_RESULTS")
-    rag_score_threshold: float = Field(default=0.7, env="RAG_SCORE_THRESHOLD")
+    rag_vector_store_path: str = Field(default="./vector_store")
+    rag_chunk_size: int = Field(default=1000)
+    rag_chunk_overlap: int = Field(default=200)
+    rag_max_results: int = Field(default=5)
+    rag_score_threshold: float = Field(default=0.7)
 
     # Observability
-    log_level: str = Field(default="INFO", env="LOG_LEVEL")
-    otlp_endpoint: Optional[str] = Field(default=None, env="OTLP_ENDPOINT")
-
-    class Config:
-        env_file = ".env"
-        case_sensitive = False
+    log_level: str = Field(default="INFO")
+    otlp_endpoint: Optional[str] = Field(default=None)
 
     @property
     def is_development(self) -> bool:
@@ -85,7 +86,7 @@ class Settings(BaseSettings):
 
         if errors:
             raise ValueError(
-                f"Production configuration validation failed:\n" + "\n".join(f"  - {e}" for e in errors)
+                "Production configuration validation failed:\n" + "\n".join(f"  - {e}" for e in errors)
             )
 
     def validate_llm_config(self) -> None:

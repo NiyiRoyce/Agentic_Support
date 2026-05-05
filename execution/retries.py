@@ -12,7 +12,7 @@ import random
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
 from enum import Enum
-from typing import Callable, Optional, Type, TypeVar, Union, List, Tuple
+from typing import Callable, Optional, Type, TypeVar, List, Tuple
 import logging
 
 logger = logging.getLogger(__name__)

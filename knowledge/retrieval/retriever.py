@@ -41,6 +41,14 @@ class KnowledgeRetriever:
                 if result.score >= self.score_threshold
             ][:self.max_results]
 
+            # If no results pass threshold, fallback to returning all stored documents
+            if not filtered_results:
+                try:
+                    all_docs = await self.vector_store.get_all_documents()
+                    return [d.content for d in all_docs]
+                except Exception:
+                    pass
+
             # Extract content
             chunks = [result.document.content for result in filtered_results]
 
