@@ -1,7 +1,7 @@
 """Request schemas."""
 
 from typing import Optional, Dict, Any
-from pydantic import BaseModel, ConfigDict, Field, field_validator
+from pydantic import BaseModel, ConfigDict, Field, validator, field_validator
 
 
 class ChatRequest(BaseModel):

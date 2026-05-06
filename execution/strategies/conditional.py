@@ -1,6 +1,6 @@
 # Conditional execution (if/else)
 """Conditional execution strategy"""
-from typing import List, Dict, Any, Optional, Callable
+from typing import Any, List, Optional, Callable
 import logging
 
 from execution.models import ToolCall, ToolResult

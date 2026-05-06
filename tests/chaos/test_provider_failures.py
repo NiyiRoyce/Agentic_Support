@@ -62,7 +62,7 @@ async def test_llm_router_fallback_on_failure():
         fallback_providers=[LLMProvider.ANTHROPIC]
     )
 
-    from llm import LLMMessage, LLMConfig
+    from llm import LLMMessage
 
     messages = [LLMMessage(role="user", content="Hello")]
 

@@ -4,7 +4,7 @@ import pytest
 
 
 from agents.intent.agent import IntentAgent
-from agents.base import AgentContext, AgentResult
+from agents.base import AgentContext
 from agents.intent.schemas import IntentType
 from llm import LLMRouter
 from llm.providers.mock import MockLLMProvider

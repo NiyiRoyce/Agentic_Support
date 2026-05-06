@@ -23,12 +23,10 @@ import logging
 # Add project root to path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from llm import LLMRouter, LLMProvider, LLMConfig, LLMMessage
+from llm import LLMRouter, LLMProvider
 from llm.providers.mock import MockLLMProvider
-from agents.intent.agent import IntentAgent
-from agents.base import AgentContext
 from execution.circuit_breaker import CircuitBreaker, CircuitBreakerConfig, CircuitBreakerOpen
-from execution.retries import RetryExecutor, RetryConfig, RetryStrategy, MaxRetriesExceeded
+from execution.retries import RetryExecutor, RetryConfig, RetryStrategy
 
 logging.basicConfig(
     level=logging.INFO,
@@ -269,12 +267,7 @@ class ChaosTestSuite:
         start_time = time.time()
         
         try:
-            config = RetryConfig(
-                max_attempts=2,
-                initial_delay=0.1,
-            )
-            # executor = RetryExecutor(config)  # Not used in this test
-            
+            # executor = RetryExecutor(RetryConfig(max_attempts=2, initial_delay=0.1))  # Not used in this test
             async def slow_task():
                 await asyncio.sleep(1.0)
                 return "done"
