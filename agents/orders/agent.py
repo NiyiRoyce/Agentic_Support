@@ -1,5 +1,3 @@
-# orders agent (stub)
-
 from typing import Optional, Dict, Any
 
 from agents.base import BaseAgent, AgentContext, AgentResult, AgentType

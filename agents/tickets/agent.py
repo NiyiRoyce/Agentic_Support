@@ -1,5 +1,3 @@
-# tickets agent (stub)
-
 from typing import cast, Dict, Any
 
 from agents.base import BaseAgent, AgentContext, AgentResult, AgentType

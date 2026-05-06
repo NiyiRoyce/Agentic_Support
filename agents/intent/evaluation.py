@@ -1,4 +1,3 @@
-# evaluation helpers for intent agent
 """Evaluation metrics for Intent Agent."""
 
 from typing import List, Dict, Tuple

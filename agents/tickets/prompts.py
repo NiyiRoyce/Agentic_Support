@@ -1,6 +1,3 @@
-# prompts for tickets agent
-
-
 class TicketPrompts:
     SYSTEM_PROMPT = """You are a support ticket creation assistant.
     

@@ -1,5 +1,3 @@
-# schemas for escalation agent
-
 from pydantic import BaseModel
 from enum import Enum
 

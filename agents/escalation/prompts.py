@@ -1,6 +1,3 @@
-# prompts for escalation agent
-
-
 class EscalationPrompts:
     SYSTEM_PROMPT = """You are an escalation decision system.
     

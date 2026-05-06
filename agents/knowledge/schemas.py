@@ -1,4 +1,3 @@
-# schemas for knowledge agent
 """Schemas for Knowledge Agent."""
 
 from typing import Optional, List

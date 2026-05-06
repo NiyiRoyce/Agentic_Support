@@ -1,6 +1,3 @@
-# prompts for orders agent
-
-
 class OrderPrompts:
     SYSTEM_PROMPT = """You are an order management assistant.
     

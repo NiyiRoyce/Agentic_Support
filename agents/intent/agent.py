@@ -1,4 +1,3 @@
-# intent agent implementation (stub)
 """Intent classification agent."""
 
 from typing import Optional, cast, Dict, Any

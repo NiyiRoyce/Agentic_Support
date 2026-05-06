@@ -1,4 +1,3 @@
-# evaluation helpers for knowledge agent
 """Evaluation metrics for Knowledge Agent."""
 
 from typing import List, Dict, Optional

@@ -1,4 +1,3 @@
-# knowledge agent implementation (stub)
 """Knowledge retrieval agent using RAG."""
 
 from typing import Optional, List, cast, Dict, Any
@@ -66,7 +65,7 @@ class KnowledgeAgent(BaseAgent):
                 reasoning="Standard greeting response",
             )
 
-        # Check if we have context
+        # Check if context exists
         if not retrieved_chunks:
             return self._handle_no_context(user_message)
 

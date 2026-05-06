@@ -1,4 +1,3 @@
-# prompts for intent agent
 """Prompts for Intent Agent."""
 
 from typing import Dict, Any

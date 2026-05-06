@@ -1,4 +1,3 @@
-# prompts for knowledge agent
 """Prompts for Knowledge Agent."""
 
 from typing import List
