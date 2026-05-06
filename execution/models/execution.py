@@ -36,11 +36,7 @@ class ExecutionResponse(BaseModel):
     duration_ms: Optional[float] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    model_config = ConfigDict(
-        json_encoders={
-            datetime: lambda v: v.isoformat()
-        }
-    )
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
     @property
     def success(self) -> bool:

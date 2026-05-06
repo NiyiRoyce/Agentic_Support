@@ -50,7 +50,9 @@ class LLMRouter:
     ):
         self.providers = providers
         self.config = route_config or RouteConfig()
-        self._circuit_breaker: Dict[LLMProvider, Dict[str, int]] = {}  # Track provider health
+        self._circuit_breaker: Dict[
+            LLMProvider, Dict[str, int]
+        ] = {}  # Track provider health
 
     async def complete(
         self,

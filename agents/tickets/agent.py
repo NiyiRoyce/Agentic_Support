@@ -39,7 +39,9 @@ class TicketsAgent(BaseAgent):
             return self._create_error_result(f"Parse error: {error}")
 
         return self._create_success_result(
-            data=cast(Dict[str, Any], parsed), confidence=0.85, reasoning="Ticket details generated"
+            data=cast(Dict[str, Any], parsed),
+            confidence=0.85,
+            reasoning="Ticket details generated",
         )
 
     def build_prompt(self, user_message: str, context: AgentContext, **kwargs) -> str:

@@ -40,7 +40,9 @@ class EscalationAgent(BaseAgent):
 
         return self._create_success_result(
             data=cast(Dict[str, Any], parsed),
-            confidence=cast(Dict[str, Any], parsed).get("should_escalate", False) and 0.95 or 0.85,
+            confidence=cast(Dict[str, Any], parsed).get("should_escalate", False)
+            and 0.95
+            or 0.85,
             reasoning="Escalation decision made",
         )
 

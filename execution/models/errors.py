@@ -71,8 +71,4 @@ class ExecutionError(BaseModel):
     details: Optional[Dict[str, Any]] = None
     recoverable: bool = False
 
-    model_config = ConfigDict(
-        json_encoders={
-            datetime: lambda v: v.isoformat()
-        }
-    )
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})

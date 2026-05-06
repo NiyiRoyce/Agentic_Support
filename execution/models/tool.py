@@ -41,11 +41,7 @@ class ToolResult(BaseModel):
     metadata: Dict[str, Any] = Field(default_factory=dict)
     retry_count: int = 0
 
-    model_config = ConfigDict(
-        json_encoders={
-            datetime: lambda v: v.isoformat()
-        }
-    )
+    model_config = ConfigDict(json_encoders={datetime: lambda v: v.isoformat()})
 
     @property
     def success(self) -> bool:

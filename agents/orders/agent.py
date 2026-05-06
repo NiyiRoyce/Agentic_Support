@@ -52,9 +52,7 @@ class OrdersAgent(BaseAgent):
             reasoning="Order status response generated",
         )
 
-    def build_prompt(
-        self, user_message: str, context: AgentContext, **kwargs
-    ) -> str:
+    def build_prompt(self, user_message: str, context: AgentContext, **kwargs) -> str:
         order_data = kwargs.get("order_data", {})
         order_id = order_data.get("order_id", "Unknown")
         return self.prompts.build_order_status_prompt(order_id, order_data)
