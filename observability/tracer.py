@@ -52,9 +52,7 @@ def configure_tracing(otlp_endpoint: str | None = None) -> None:
             otlp_endpoint,
         )
     else:
-        logger.info(
-            "OpenTelemetry tracing configured (no exporter set)"
-        )
+        logger.info("OpenTelemetry tracing configured (no exporter set)")
 
 
 def instrument_fastapi(app: Any) -> None:
@@ -67,13 +65,9 @@ def instrument_fastapi(app: Any) -> None:
     if FASTAPI_INSTRUMENTOR_AVAILABLE:
         FastAPIInstrumentor.instrument_app(app)
 
-        logger.info(
-            "FastAPI instrumented with OpenTelemetry"
-        )
+        logger.info("FastAPI instrumented with OpenTelemetry")
     else:
-        logger.warning(
-            "OpenTelemetry FastAPI instrumentation not available"
-        )
+        logger.warning("OpenTelemetry FastAPI instrumentation not available")
 
 
 def get_tracer(name: str) -> trace.Tracer:
