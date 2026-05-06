@@ -1,7 +1,7 @@
 # memory manager
 """Memory manager for conversation state management."""
 
-from typing import Optional, List, Dict, Any, Union, TYPE_CHECKING
+from typing import Optional, List, Dict, Any, TYPE_CHECKING
 from datetime import datetime
 import uuid
 
