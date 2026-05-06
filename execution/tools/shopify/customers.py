@@ -1,5 +1,6 @@
 # shopify customers helper
 """Shopify customer tools"""
+
 from typing import Dict, Any, Optional
 from datetime import datetime
 import logging
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class ShopifyGetCustomerTool(BaseTool):
     """Get Shopify customer by ID or email"""
-    
+
     def __init__(self):
         super().__init__(
             name="shopify_get_customer",
@@ -24,20 +25,20 @@ class ShopifyGetCustomerTool(BaseTool):
             timeout_seconds=30,
             idempotent=True,
         )
-    
+
     async def execute(
         self,
         params: Dict[str, Any],
         context: Optional[ExecutionContext] = None,
     ) -> ToolResult:
         start_time = datetime.utcnow()
-        
+
         try:
             client = ShopifyClient(
                 shop_name=params["shop_name"],
                 access_token=params["access_token"],
             )
-            
+
             # Search by customer_id or email
             if "customer_id" in params:
                 customer_id = params["customer_id"]
@@ -45,16 +46,18 @@ class ShopifyGetCustomerTool(BaseTool):
                 customer = response.get("customer", {})
             elif "email" in params:
                 email = params["email"]
-                response = await client.get("customers/search", params={"query": f"email:{email}"})
+                response = await client.get(
+                    "customers/search", params={"query": f"email:{email}"}
+                )
                 customers = response.get("customers", [])
                 customer = customers[0] if customers else {}
             else:
                 raise ValueError("Either customer_id or email must be provided")
-            
+
             await client.close()
-            
+
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.SUCCESS,
@@ -69,18 +72,18 @@ class ShopifyGetCustomerTool(BaseTool):
                 },
                 execution_time_ms=execution_time,
             )
-            
+
         except Exception as e:
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
             logger.error(f"Failed to get Shopify customer: {e}")
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.FAILED,
                 error=str(e),
                 execution_time_ms=execution_time,
             )
-    
+
     def get_parameter_schema(self) -> Dict[str, Any]:
         return {
             "type": "object",
@@ -100,7 +103,7 @@ class ShopifyGetCustomerTool(BaseTool):
 
 class ShopifyUpdateCustomerTool(BaseTool):
     """Update Shopify customer information"""
-    
+
     def __init__(self):
         super().__init__(
             name="shopify_update_customer",
@@ -110,51 +113,50 @@ class ShopifyUpdateCustomerTool(BaseTool):
             timeout_seconds=30,
             idempotent=False,
         )
-    
+
     async def execute(
         self,
         params: Dict[str, Any],
         context: Optional[ExecutionContext] = None,
     ) -> ToolResult:
         start_time = datetime.utcnow()
-        
+
         try:
             client = ShopifyClient(
                 shop_name=params["shop_name"],
                 access_token=params["access_token"],
             )
-            
+
             customer_id = params["customer_id"]
             updates = params["updates"]
-            
+
             # Update customer
             response = await client.put(
-                f"customers/{customer_id}",
-                data={"customer": updates}
+                f"customers/{customer_id}", data={"customer": updates}
             )
-            
+
             await client.close()
-            
+
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.SUCCESS,
                 data=response,
                 execution_time_ms=execution_time,
             )
-            
+
         except Exception as e:
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
             logger.error(f"Failed to update Shopify customer: {e}")
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.FAILED,
                 error=str(e),
                 execution_time_ms=execution_time,
             )
-    
+
     def get_parameter_schema(self) -> Dict[str, Any]:
         return {
             "type": "object",

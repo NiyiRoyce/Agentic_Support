@@ -1,5 +1,6 @@
 # ToolCall, ToolMetadata
 """Tool-related models"""
+
 from typing import Dict, Any, Optional, List
 from pydantic import BaseModel, Field
 from datetime import datetime
@@ -10,6 +11,7 @@ from .status import ToolStatus
 
 class ToolCategory(str, Enum):
     """Tool categories"""
+
     HELPDESK = "helpdesk"
     ECOMMERCE = "ecommerce"
     NOTIFICATION = "notification"
@@ -19,6 +21,7 @@ class ToolCategory(str, Enum):
 
 class ToolCall(BaseModel):
     """A single tool invocation request"""
+
     tool_name: str
     params: Dict[str, Any] = Field(default_factory=dict)
     timeout_seconds: Optional[int] = 30
@@ -28,6 +31,7 @@ class ToolCall(BaseModel):
 
 class ToolResult(BaseModel):
     """Result from a tool execution"""
+
     tool_name: str
     status: ToolStatus
     data: Optional[Dict[str, Any]] = None
@@ -36,12 +40,10 @@ class ToolResult(BaseModel):
     timestamp: datetime = Field(default_factory=datetime.utcnow)
     metadata: Dict[str, Any] = Field(default_factory=dict)
     retry_count: int = 0
-    
+
     class Config:
-        json_encoders = {
-            datetime: lambda v: v.isoformat()
-        }
-    
+        json_encoders = {datetime: lambda v: v.isoformat()}
+
     @property
     def success(self) -> bool:
         return self.status == ToolStatus.SUCCESS
@@ -49,6 +51,7 @@ class ToolResult(BaseModel):
 
 class ToolMetadata(BaseModel):
     """Metadata about a tool"""
+
     name: str
     description: str
     category: ToolCategory

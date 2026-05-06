@@ -1,5 +1,6 @@
 # gorgias integration
 """Gorgias helpdesk tools"""
+
 from typing import Dict, Any, Optional
 from datetime import datetime
 import httpx
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class GorgiasCreateTicketTool(BaseTool):
     """Create a ticket in Gorgias"""
-    
+
     def __init__(self):
         super().__init__(
             name="gorgias_create_ticket",
@@ -24,18 +25,18 @@ class GorgiasCreateTicketTool(BaseTool):
             timeout_seconds=30,
             idempotent=False,
         )
-    
+
     async def execute(
         self,
         params: Dict[str, Any],
         context: Optional[ExecutionContext] = None,
     ) -> ToolResult:
         start_time = datetime.utcnow()
-        
+
         try:
             domain = params["domain"]
             api_key = params["api_key"]
-            
+
             # Prepare ticket data
             ticket_data = {
                 "messages": [
@@ -55,15 +56,15 @@ class GorgiasCreateTicketTool(BaseTool):
                 "via": "api",
                 "subject": params.get("subject", "Support Request"),
             }
-            
+
             # Add tags if provided
             if "tags" in params:
                 ticket_data["tags"] = params["tags"]
-            
+
             # Add priority if provided
             if "priority" in params:
                 ticket_data["priority"] = params["priority"]
-            
+
             # Make API request
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -73,11 +74,11 @@ class GorgiasCreateTicketTool(BaseTool):
                     timeout=30.0,
                 )
                 response.raise_for_status()
-                
+
                 ticket = response.json()
-            
+
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.SUCCESS,
@@ -88,18 +89,18 @@ class GorgiasCreateTicketTool(BaseTool):
                 },
                 execution_time_ms=execution_time,
             )
-            
+
         except Exception as e:
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
             logger.error(f"Failed to create Gorgias ticket: {e}")
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.FAILED,
                 error=str(e),
                 execution_time_ms=execution_time,
             )
-    
+
     def get_parameter_schema(self) -> Dict[str, Any]:
         return {
             "type": "object",
@@ -155,7 +156,7 @@ class GorgiasCreateTicketTool(BaseTool):
 
 class GorgiasUpdateTicketTool(BaseTool):
     """Update a Gorgias ticket"""
-    
+
     def __init__(self):
         super().__init__(
             name="gorgias_update_ticket",
@@ -165,34 +166,34 @@ class GorgiasUpdateTicketTool(BaseTool):
             timeout_seconds=30,
             idempotent=False,
         )
-    
+
     async def execute(
         self,
         params: Dict[str, Any],
         context: Optional[ExecutionContext] = None,
     ) -> ToolResult:
         start_time = datetime.utcnow()
-        
+
         try:
             domain = params["domain"]
             api_key = params["api_key"]
             ticket_id = params["ticket_id"]
-            
+
             # Prepare update data
             update_data = {}
-            
+
             if "status" in params:
                 update_data["status"] = params["status"]
-            
+
             if "priority" in params:
                 update_data["priority"] = params["priority"]
-            
+
             if "assignee_user_id" in params:
                 update_data["assignee_user"] = {"id": params["assignee_user_id"]}
-            
+
             if "tags" in params:
                 update_data["tags"] = params["tags"]
-            
+
             # Make API request
             async with httpx.AsyncClient() as client:
                 response = await client.put(
@@ -202,11 +203,11 @@ class GorgiasUpdateTicketTool(BaseTool):
                     timeout=30.0,
                 )
                 response.raise_for_status()
-                
+
                 ticket = response.json()
-            
+
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.SUCCESS,
@@ -216,18 +217,18 @@ class GorgiasUpdateTicketTool(BaseTool):
                 },
                 execution_time_ms=execution_time,
             )
-            
+
         except Exception as e:
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
             logger.error(f"Failed to update Gorgias ticket: {e}")
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.FAILED,
                 error=str(e),
                 execution_time_ms=execution_time,
             )
-    
+
     def get_parameter_schema(self) -> Dict[str, Any]:
         return {
             "type": "object",
@@ -258,7 +259,7 @@ class GorgiasUpdateTicketTool(BaseTool):
 
 class GorgiasAddMessageTool(BaseTool):
     """Add a message to a Gorgias ticket"""
-    
+
     def __init__(self):
         super().__init__(
             name="gorgias_add_message",
@@ -268,19 +269,19 @@ class GorgiasAddMessageTool(BaseTool):
             timeout_seconds=30,
             idempotent=False,
         )
-    
+
     async def execute(
         self,
         params: Dict[str, Any],
         context: Optional[ExecutionContext] = None,
     ) -> ToolResult:
         start_time = datetime.utcnow()
-        
+
         try:
             domain = params["domain"]
             api_key = params["api_key"]
             ticket_id = params["ticket_id"]
-            
+
             # Prepare message data
             message_data = {
                 "channel": params.get("channel", "email"),
@@ -289,7 +290,7 @@ class GorgiasAddMessageTool(BaseTool):
                 "body_text": params["message"],
                 "body_html": params.get("message_html", params["message"]),
             }
-            
+
             # Make API request
             async with httpx.AsyncClient() as client:
                 response = await client.post(
@@ -299,11 +300,11 @@ class GorgiasAddMessageTool(BaseTool):
                     timeout=30.0,
                 )
                 response.raise_for_status()
-                
+
                 message = response.json()
-            
+
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.SUCCESS,
@@ -313,18 +314,18 @@ class GorgiasAddMessageTool(BaseTool):
                 },
                 execution_time_ms=execution_time,
             )
-            
+
         except Exception as e:
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
             logger.error(f"Failed to add message to Gorgias ticket: {e}")
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.FAILED,
                 error=str(e),
                 execution_time_ms=execution_time,
             )
-    
+
     def get_parameter_schema(self) -> Dict[str, Any]:
         return {
             "type": "object",

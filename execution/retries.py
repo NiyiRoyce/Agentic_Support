@@ -22,6 +22,7 @@ T = TypeVar("T")
 
 class RetryStrategy(str, Enum):
     """Available retry strategies."""
+
     IMMEDIATE = "immediate"
     LINEAR = "linear"
     EXPONENTIAL = "exponential"
@@ -32,6 +33,7 @@ class RetryStrategy(str, Enum):
 @dataclass
 class RetryConfig:
     """Configuration for retry behavior."""
+
     strategy: RetryStrategy = RetryStrategy.EXPONENTIAL
     max_attempts: int = 3
     initial_delay: float = 1.0
@@ -70,9 +72,7 @@ class ExponentialBackoff(BackoffCalculator):
     """Exponential backoff: delay = initial_delay * (base ^ attempt)."""
 
     def calculate_delay(self, attempt: int, config: RetryConfig) -> float:
-        delay = config.initial_delay * (
-            config.exponential_base ** attempt
-        )
+        delay = config.initial_delay * (config.exponential_base**attempt)
         return min(delay, config.max_delay)
 
 
@@ -87,7 +87,7 @@ class FibonacciBackoff(BackoffCalculator):
             self._fibonacci_cache.append(
                 self._fibonacci_cache[-1] + self._fibonacci_cache[-2]
             )
-        
+
         delay = config.initial_delay * self._fibonacci_cache[attempt]
         return min(delay, config.max_delay)
 
@@ -114,16 +114,16 @@ class RetryExecutor:
     ) -> T:
         """
         Execute function with retry logic.
-        
+
         Args:
             func: Async function to execute
             *args: Positional arguments
             retryable_exceptions: Exceptions to retry on (default: all exceptions)
             **kwargs: Keyword arguments
-            
+
         Returns:
             Result from function
-            
+
         Raises:
             MaxRetriesExceeded: If all retries exhausted
         """
@@ -133,22 +133,24 @@ class RetryExecutor:
         for attempt in range(self.config.max_attempts):
             try:
                 result = await func(*args, **kwargs)
-                
+
                 if attempt > 0:
                     logger.info(
                         f"Function succeeded on attempt {attempt + 1}/"
                         f"{self.config.max_attempts}"
                     )
-                
+
                 return result
-            
+
             except BaseException as e:
                 # Check if exception is retryable
-                if not any(isinstance(e, exc_type) for exc_type in retryable_exceptions):
+                if not any(
+                    isinstance(e, exc_type) for exc_type in retryable_exceptions
+                ):
                     raise
-                
+
                 last_exception = e
-                
+
                 if attempt < self.config.max_attempts - 1:
                     delay = self._calculate_delay(attempt)
                     logger.warning(
@@ -173,9 +175,9 @@ class RetryExecutor:
             self.config.strategy,
             ImmediateBackoff(),
         )
-        
+
         delay = calculator.calculate_delay(attempt, self.config)
-        
+
         # Apply jitter
         if self.config.jitter and delay > 0:
             jitter_factor = random.uniform(
@@ -183,7 +185,7 @@ class RetryExecutor:
                 self.config.jitter_range[1],
             )
             delay *= jitter_factor
-        
+
         return delay
 
     def with_fallback(
@@ -192,9 +194,10 @@ class RetryExecutor:
     ) -> Callable:
         """
         Create a retry executor with fallback function.
-        
+
         If all retries fail, calls fallback_fn instead of raising.
         """
+
         async def wrapper(
             func: Callable,
             *args,
@@ -205,7 +208,7 @@ class RetryExecutor:
             except MaxRetriesExceeded:
                 logger.info("All retries exhausted, using fallback")
                 return await fallback_fn(*args, **kwargs)
-        
+
         return wrapper
 
 
@@ -229,11 +232,13 @@ class RetryDecorator:
 
     def __call__(self, func: Callable) -> Callable:
         """Decorate async function with retry logic."""
+
         async def wrapper(*args, **kwargs) -> T:
             return await self.executor.execute(
                 lambda: func(*args, **kwargs),
                 retryable_exceptions=self.retryable_exceptions,
             )
+
         return wrapper
 
 
@@ -257,7 +262,7 @@ class CircuitAwareRetryExecutor(RetryExecutor):
     ) -> T:
         """Execute with circuit breaker awareness."""
         from execution.circuit_breaker import CircuitBreakerOpen
-        
+
         retryable_exceptions = retryable_exceptions or [Exception]
         last_exception = None
 
@@ -268,15 +273,15 @@ class CircuitAwareRetryExecutor(RetryExecutor):
                     result = await self.circuit_breaker.call(func, *args, **kwargs)
                 else:
                     result = await func(*args, **kwargs)
-                
+
                 if attempt > 0:
                     logger.info(
                         f"Function succeeded on attempt {attempt + 1}/"
                         f"{self.config.max_attempts}"
                     )
-                
+
                 return result
-            
+
             except CircuitBreakerOpen as e:
                 # Circuit is open, fail fast
                 logger.error(f"Circuit breaker open, failing fast: {e}")
@@ -284,13 +289,15 @@ class CircuitAwareRetryExecutor(RetryExecutor):
                     "Circuit breaker open",
                     last_exception=e,
                 )
-            
+
             except BaseException as e:
-                if not any(isinstance(e, exc_type) for exc_type in retryable_exceptions):
+                if not any(
+                    isinstance(e, exc_type) for exc_type in retryable_exceptions
+                ):
                     raise
-                
+
                 last_exception = e
-                
+
                 if attempt < self.config.max_attempts - 1:
                     delay = self._calculate_delay(attempt)
                     logger.warning(

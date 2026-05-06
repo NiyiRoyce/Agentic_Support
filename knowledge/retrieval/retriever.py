@@ -22,7 +22,9 @@ class KnowledgeRetriever:
         self.max_results = max_results
         self.score_threshold = score_threshold
 
-    async def retrieve(self, query: str, metadata_filter: Optional[Dict[str, Any]] = None) -> List[str]:
+    async def retrieve(
+        self, query: str, metadata_filter: Optional[Dict[str, Any]] = None
+    ) -> List[str]:
         """Retrieve relevant knowledge chunks for a query."""
         try:
             # Generate embedding for query
@@ -37,9 +39,8 @@ class KnowledgeRetriever:
 
             # Filter by score threshold and limit results
             filtered_results = [
-                result for result in results
-                if result.score >= self.score_threshold
-            ][:self.max_results]
+                result for result in results if result.score >= self.score_threshold
+            ][: self.max_results]
 
             # If no results pass threshold, fallback to returning all stored documents
             if not filtered_results:

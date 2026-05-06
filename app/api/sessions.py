@@ -34,12 +34,12 @@ async def create_session(
 ) -> SessionResponse:
     """
     Create a new conversation session.
-    
+
     Args:
         request: Session creation request
         memory: Memory manager
         api_key: Verified API key
-        
+
     Returns:
         SessionResponse with new session details
     """
@@ -48,9 +48,9 @@ async def create_session(
             user_id=request.user_id,
             metadata=request.metadata or {},
         )
-        
+
         logger.info(f"Created session {session.session_id} for user {request.user_id}")
-        
+
         return SessionResponse(
             success=True,
             session_id=session.session_id,
@@ -60,12 +60,12 @@ async def create_session(
             message_count=0,
             metadata=session.metadata,
         )
-    
+
     except Exception as e:
         logger.error(f"Error creating session: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to create session: {str(e)}"
+            detail=f"Failed to create session: {str(e)}",
         )
 
 
@@ -87,23 +87,23 @@ async def get_session(
 ) -> SessionResponse:
     """
     Get session details.
-    
+
     Args:
         session_id: Session identifier
         memory: Memory manager
         api_key: Verified API key
-        
+
     Returns:
         SessionResponse with session details
     """
     session = await memory.get_session(session_id)
-    
+
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Session {session_id} not found"
+            detail=f"Session {session_id} not found",
         )
-    
+
     return SessionResponse(
         success=True,
         session_id=session.session_id,
@@ -134,13 +134,13 @@ async def update_session(
 ) -> SessionResponse:
     """
     Update session metadata.
-    
+
     Args:
         request: Update request
         session_id: Session identifier
         memory: Memory manager
         api_key: Verified API key
-        
+
     Returns:
         SessionResponse with updated session
     """
@@ -149,19 +149,19 @@ async def update_session(
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Session {session_id} not found"
+            detail=f"Session {session_id} not found",
         )
-    
+
     try:
         await memory.update_session_metadata(
             session_id=session_id,
             metadata=request.metadata,
             merge=request.merge,
         )
-        
+
         # Fetch updated session
         updated_session = await memory.get_session(session_id)
-        
+
         return SessionResponse(
             success=True,
             session_id=updated_session.session_id,
@@ -171,12 +171,12 @@ async def update_session(
             message_count=len(updated_session.messages),
             metadata=updated_session.metadata,
         )
-    
+
     except Exception as e:
         logger.error(f"Error updating session: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to update session: {str(e)}"
+            detail=f"Failed to update session: {str(e)}",
         )
 
 
@@ -198,20 +198,20 @@ async def delete_session(
 ):
     """
     Delete a conversation session.
-    
+
     Args:
         session_id: Session identifier
         memory: Memory manager
         api_key: Verified API key
     """
     deleted = await memory.delete_session(session_id)
-    
+
     if not deleted:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Session {session_id} not found"
+            detail=f"Session {session_id} not found",
         )
-    
+
     logger.info(f"Deleted session {session_id}")
 
 
@@ -234,30 +234,30 @@ async def get_conversation_history(
 ) -> ConversationHistoryResponse:
     """
     Get conversation history.
-    
+
     Args:
         session_id: Session identifier
         limit: Maximum messages to return
         memory: Memory manager
         api_key: Verified API key
-        
+
     Returns:
         ConversationHistoryResponse with messages
     """
     session = await memory.get_session(session_id)
-    
+
     if not session:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND,
-            detail=f"Session {session_id} not found"
+            detail=f"Session {session_id} not found",
         )
-    
+
     messages = await memory.get_conversation_history(
         session_id=session_id,
         limit=limit,
         include_summary=True,
     )
-    
+
     return ConversationHistoryResponse(
         success=True,
         session_id=session_id,
@@ -293,18 +293,18 @@ async def list_user_sessions(
 ) -> List[SessionResponse]:
     """
     List sessions for a user.
-    
+
     Args:
         user_id: User identifier
         limit: Maximum sessions to return
         memory: Memory manager
         api_key: Verified API key
-        
+
     Returns:
         List of SessionResponse
     """
     sessions = await memory.list_user_sessions(user_id=user_id, limit=limit)
-    
+
     return [
         SessionResponse(
             success=True,

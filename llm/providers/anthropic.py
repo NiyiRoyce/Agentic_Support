@@ -45,10 +45,9 @@ class AnthropicProvider(BaseLLMProvider):
                 if msg.role == "system":
                     system_message = msg.content
                 else:
-                    conversation_messages.append({
-                        "role": msg.role,
-                        "content": msg.content
-                    })
+                    conversation_messages.append(
+                        {"role": msg.role, "content": msg.content}
+                    )
 
             # Build request params
             params = {

@@ -21,8 +21,7 @@ class OpenAIEmbedder(Embedder):
         """Generate embeddings for multiple texts."""
         try:
             response = await self.client.embeddings.create(
-                input=texts,
-                model=self.model
+                input=texts, model=self.model
             )
             return [data.embedding for data in response.data]
         except Exception as e:

@@ -17,11 +17,13 @@ COST_RATES = {
         "claude-3-opus": {"input": 0.015, "output": 0.075},
         "claude-3-sonnet": {"input": 0.003, "output": 0.015},
         "claude-3-haiku": {"input": 0.00025, "output": 0.00125},
-    }
+    },
 }
 
 
-def calculate_llm_cost(provider: str, model: str, input_tokens: int, output_tokens: int) -> float:
+def calculate_llm_cost(
+    provider: str, model: str, input_tokens: int, output_tokens: int
+) -> float:
     """
     Calculate the cost of an LLM request.
 
@@ -46,7 +48,9 @@ def calculate_llm_cost(provider: str, model: str, input_tokens: int, output_toke
     return total_cost
 
 
-def track_llm_cost(provider: str, model: str, input_tokens: int, output_tokens: int) -> None:
+def track_llm_cost(
+    provider: str, model: str, input_tokens: int, output_tokens: int
+) -> None:
     """
     Track LLM cost and update metrics.
 
@@ -69,7 +73,7 @@ def track_llm_cost(provider: str, model: str, input_tokens: int, output_tokens: 
         model=model,
         input_tokens=input_tokens,
         output_tokens=output_tokens,
-        cost=cost
+        cost=cost,
     )
 
 
@@ -87,10 +91,12 @@ def extract_tokens_from_response(response: Any) -> tuple[int, int]:
     # For OpenAI: response.usage.prompt_tokens, response.usage.completion_tokens
     # For Anthropic: response.usage.input_tokens, response.usage.output_tokens
 
-    input_tokens = getattr(response, 'usage', {}).get('prompt_tokens', 0) or \
-                  getattr(response, 'usage', {}).get('input_tokens', 0)
-    output_tokens = getattr(response, 'usage', {}).get('completion_tokens', 0) or \
-                   getattr(response, 'usage', {}).get('output_tokens', 0)
+    input_tokens = getattr(response, "usage", {}).get("prompt_tokens", 0) or getattr(
+        response, "usage", {}
+    ).get("input_tokens", 0)
+    output_tokens = getattr(response, "usage", {}).get(
+        "completion_tokens", 0
+    ) or getattr(response, "usage", {}).get("output_tokens", 0)
 
     return input_tokens, output_tokens
 
@@ -105,7 +111,7 @@ def track_llm_response(provider: str, model: str, response: Any) -> None:
         response: LLM response object (LLMResponse or raw response)
     """
     # Try to extract from LLMResponse first
-    if hasattr(response, 'tokens_used'):
+    if hasattr(response, "tokens_used"):
         # Assume input_tokens is not separated, use total tokens for cost estimation
         # In practice, you'd want input/output separated
         input_tokens = response.tokens_used // 2  # Rough estimate
@@ -113,5 +119,5 @@ def track_llm_response(provider: str, model: str, response: Any) -> None:
     else:
         # Fallback to extracting from raw response
         input_tokens, output_tokens = extract_tokens_from_response(response)
-    
+
     track_llm_cost(provider, model, input_tokens, output_tokens)

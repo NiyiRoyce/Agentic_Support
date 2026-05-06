@@ -1,5 +1,6 @@
 # Resilience & safety mechanisms
 """Safety and resilience mechanisms"""
+
 from .circuit_breaker import (
     CircuitBreaker,
     CircuitBreakerConfig,

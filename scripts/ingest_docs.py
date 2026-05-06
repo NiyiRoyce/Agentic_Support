@@ -21,24 +21,21 @@ from config import settings
 async def main():
     """Main ingestion function."""
     parser = argparse.ArgumentParser(description="Ingest documents into knowledge base")
-    parser.add_argument(
-        "path",
-        help="Path to file or directory to ingest"
-    )
+    parser.add_argument("path", help="Path to file or directory to ingest")
     parser.add_argument(
         "--pattern",
         default="*.txt",
-        help="File pattern for directory ingestion (default: *.txt)"
+        help="File pattern for directory ingestion (default: *.txt)",
     )
     parser.add_argument(
         "--clear",
         action="store_true",
-        help="Clear existing knowledge base before ingesting"
+        help="Clear existing knowledge base before ingesting",
     )
     parser.add_argument(
         "--metadata",
         type=str,
-        help="Additional metadata as key=value pairs (comma-separated)"
+        help="Additional metadata as key=value pairs (comma-separated)",
     )
 
     args = parser.parse_args()

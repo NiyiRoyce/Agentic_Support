@@ -8,6 +8,7 @@ from enum import Enum
 
 class IntentType(str, Enum):
     """Available intent types."""
+
     ORDER_STATUS = "order_status"
     PRODUCT_INFO = "product_info"
     TICKET_CREATION = "ticket_creation"
@@ -21,29 +22,26 @@ class IntentType(str, Enum):
 
 class IntentClassification(BaseModel):
     """Intent classification result from LLM."""
+
     intent: IntentType = Field(description="Classified intent")
     confidence: float = Field(
-        ge=0.0,
-        le=1.0,
-        description="Confidence score for classification"
+        ge=0.0, le=1.0, description="Confidence score for classification"
     )
     reasoning: str = Field(description="Explanation of classification")
     requires_clarification: bool = Field(
-        default=False,
-        description="Whether user input is ambiguous"
+        default=False, description="Whether user input is ambiguous"
     )
     clarification_question: Optional[str] = Field(
-        default=None,
-        description="Question to ask user if clarification needed"
+        default=None, description="Question to ask user if clarification needed"
     )
     extracted_entities: dict = Field(
-        default_factory=dict,
-        description="Extracted entities from user message"
+        default_factory=dict, description="Extracted entities from user message"
     )
 
 
 class IntentAgentInput(BaseModel):
     """Input for Intent Agent."""
+
     user_message: str
     conversation_history: List[dict] = Field(default_factory=list)
     user_metadata: dict = Field(default_factory=dict)
@@ -51,6 +49,7 @@ class IntentAgentInput(BaseModel):
 
 class IntentAgentOutput(BaseModel):
     """Output from Intent Agent."""
+
     intent: IntentType
     confidence: float
     reasoning: str

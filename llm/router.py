@@ -20,6 +20,7 @@ from observability.metrics import increment_llm_request_count
 
 class RoutingStrategy(str, Enum):
     """Routing strategies for LLM selection."""
+
     COST = "cost"  # Choose cheapest option
     LATENCY = "latency"  # Choose fastest option
     QUALITY = "quality"  # Choose most capable model
@@ -29,6 +30,7 @@ class RoutingStrategy(str, Enum):
 @dataclass
 class RouteConfig:
     """Configuration for LLM routing."""
+
     strategy: RoutingStrategy = RoutingStrategy.PRIMARY
     primary_provider: LLMProvider = LLMProvider.OPENAI
     fallback_providers: List[LLMProvider] = None
@@ -81,11 +83,11 @@ class LLMRouter:
 
                 if response.success:
                     self._record_success(provider_name)
-                    
+
                     # Track metrics and cost
                     increment_llm_request_count(provider_name.value, response.model)
                     track_llm_response(provider_name.value, response.model, response)
-                    
+
                     return response
                 else:
                     last_error = response.error
@@ -167,7 +169,7 @@ class LLMRouter:
 
             if attempt < max_retries - 1:
                 # Exponential backoff
-                wait_time = 2 ** attempt
+                wait_time = 2**attempt
                 await asyncio.sleep(wait_time)
 
         return response

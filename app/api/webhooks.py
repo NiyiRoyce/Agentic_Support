@@ -1,4 +1,3 @@
-
 """Webhook endpoints for external integrations."""
 
 from fastapi import APIRouter, Depends
@@ -24,16 +23,16 @@ async def process_webhook(
 ) -> WebhookResponse:
     """
     Process incoming webhook.
-    
+
     Args:
         request: Webhook request
         api_key: Verified API key
-        
+
     Returns:
         WebhookResponse
     """
     logger.info(f"Received webhook: {request.event_type} from {request.source}")
-    
+
     # Route webhook based on event type
     if request.event_type.startswith("order."):
         return await _handle_order_webhook(request)
@@ -41,11 +40,9 @@ async def process_webhook(
         return await _handle_ticket_webhook(request)
     else:
         logger.warning(f"Unknown webhook type: {request.event_type}")
-    
+
     return WebhookResponse(
-        success=True,
-        event_type=request.event_type,
-        message="Webhook processed"
+        success=True, event_type=request.event_type, message="Webhook processed"
     )
 
 
@@ -54,9 +51,7 @@ async def _handle_order_webhook(request: WebhookRequest) -> WebhookResponse:
     # Process order updates (e.g., from Shopify)
     # Update memory, notify users, etc.
     return WebhookResponse(
-        success=True,
-        event_type=request.event_type,
-        message="Order webhook processed"
+        success=True, event_type=request.event_type, message="Order webhook processed"
     )
 
 
@@ -64,7 +59,5 @@ async def _handle_ticket_webhook(request: WebhookRequest) -> WebhookResponse:
     """Handle ticket-related webhooks."""
     # Process ticket updates (e.g., from Gorgias)
     return WebhookResponse(
-        success=True,
-        event_type=request.event_type,
-        message="Ticket webhook processed"
+        success=True, event_type=request.event_type, message="Ticket webhook processed"
     )

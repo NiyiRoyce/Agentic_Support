@@ -13,54 +13,55 @@ from agents.base import AgentContext
 class OrchestrationContext:
     """
     Request-scoped context that flows through the orchestration pipeline.
-    
+
     Contains all information needed to process a user request through
     multiple agents and execution steps.
     """
+
     # Request identifiers
     request_id: str = field(default_factory=lambda: f"req_{uuid.uuid4().hex[:12]}")
     trace_id: str = field(default_factory=lambda: f"trace_{uuid.uuid4().hex[:16]}")
-    
+
     # User information
     user_id: Optional[str] = None
     session_id: Optional[str] = None
-    
+
     # Request data
     user_message: str = ""
     timestamp: datetime = field(default_factory=datetime.now)
-    
+
     # Agent context (for agents)
     agent_context: Optional[AgentContext] = None
-    
+
     # Conversation metadata
     conversation_history: List[Dict[str, Any]] = field(default_factory=list)
     user_metadata: Dict[str, Any] = field(default_factory=dict)
-    
+
     # Orchestration state
     current_intent: Optional[str] = None
     confidence_scores: Dict[str, float] = field(default_factory=dict)
     executed_agents: List[str] = field(default_factory=list)
     requires_clarification: bool = False
     clarification_question: Optional[str] = None
-    
+
     # Execution tracking
     execution_plan: Optional[Any] = None  # Will be ExecutionPlan
     execution_results: Dict[str, Any] = field(default_factory=dict)
-    
+
     # Error tracking
     errors: List[Dict[str, Any]] = field(default_factory=list)
     warnings: List[str] = field(default_factory=list)
-    
+
     # Performance metrics
     start_time: datetime = field(default_factory=datetime.now)
     agent_latencies: Dict[str, float] = field(default_factory=dict)
     total_tokens_used: int = 0
     total_cost_usd: float = 0.0
-    
+
     # Flags
     escalate_to_human: bool = False
     escalation_reason: Optional[str] = None
-    
+
     def add_agent_execution(
         self,
         agent_name: str,
@@ -73,7 +74,7 @@ class OrchestrationContext:
         self.agent_latencies[agent_name] = latency_ms
         self.total_tokens_used += tokens
         self.total_cost_usd += cost
-    
+
     def add_error(
         self,
         error: str,
@@ -81,25 +82,27 @@ class OrchestrationContext:
         severity: str = "error",
     ):
         """Add error to context."""
-        self.errors.append({
-            "error": error,
-            "component": component,
-            "severity": severity,
-            "timestamp": datetime.now().isoformat(),
-        })
-    
+        self.errors.append(
+            {
+                "error": error,
+                "component": component,
+                "severity": severity,
+                "timestamp": datetime.now().isoformat(),
+            }
+        )
+
     def add_warning(self, warning: str):
         """Add warning to context."""
         self.warnings.append(warning)
-    
+
     def set_confidence(self, agent: str, confidence: float):
         """Set confidence score for an agent."""
         self.confidence_scores[agent] = confidence
-    
+
     def get_elapsed_time_ms(self) -> float:
         """Get elapsed time since request start."""
         return (datetime.now() - self.start_time).total_seconds() * 1000
-    
+
     def should_escalate(self) -> bool:
         """Determine if request should be escalated."""
         return (
@@ -107,7 +110,7 @@ class OrchestrationContext:
             or len(self.errors) > 3
             or any(e["severity"] == "critical" for e in self.errors)
         )
-    
+
     def to_dict(self) -> Dict[str, Any]:
         """Convert to dictionary for logging/monitoring."""
         return {
@@ -125,7 +128,7 @@ class OrchestrationContext:
             "errors": self.errors,
             "warnings": self.warnings,
         }
-    
+
     def get_metrics(self) -> Dict[str, Any]:
         """Get performance metrics."""
         return {
@@ -142,13 +145,14 @@ class OrchestrationContext:
 @dataclass
 class RequestMetadata:
     """Metadata about the incoming request."""
+
     source: str = "api"  # api, websocket, webhook, etc.
     client_ip: Optional[str] = None
     user_agent: Optional[str] = None
     language: str = "en"
     platform: Optional[str] = None
     version: Optional[str] = None
-    
+
     def to_dict(self) -> dict:
         """Convert to dictionary."""
         return {
@@ -165,7 +169,7 @@ class ContextBuilder:
     """
     Builds orchestration context from incoming requests.
     """
-    
+
     @staticmethod
     def from_request(
         user_message: str,
@@ -177,7 +181,7 @@ class ContextBuilder:
     ) -> OrchestrationContext:
         """
         Build orchestration context from request parameters.
-        
+
         Args:
             user_message: The user's message
             user_id: Optional user identifier
@@ -185,7 +189,7 @@ class ContextBuilder:
             conversation_history: Optional conversation history
             user_metadata: Optional user metadata
             request_metadata: Optional request metadata
-            
+
         Returns:
             OrchestrationContext
         """
@@ -196,7 +200,7 @@ class ContextBuilder:
             conversation_history=conversation_history or [],
             user_metadata=user_metadata or {},
         )
-        
+
         # Build orchestration context
         context = OrchestrationContext(
             user_id=user_id,
@@ -206,13 +210,13 @@ class ContextBuilder:
             conversation_history=conversation_history or [],
             user_metadata=user_metadata or {},
         )
-        
+
         # Add request metadata if provided
         if request_metadata:
             context.user_metadata["request_metadata"] = request_metadata.to_dict()
-        
+
         return context
-    
+
     @staticmethod
     def from_memory_session(
         user_message: str,
@@ -221,12 +225,12 @@ class ContextBuilder:
     ) -> OrchestrationContext:
         """
         Build context from memory session.
-        
+
         Args:
             user_message: The user's message
             session_id: Session identifier
             memory_manager: MemoryManager instance
-            
+
         Returns:
             OrchestrationContext (async, so caller must await)
         """
@@ -239,7 +243,7 @@ class ContextEnricher:
     """
     Enriches context with additional data during orchestration.
     """
-    
+
     @staticmethod
     def enrich_with_intent(
         context: OrchestrationContext,
@@ -249,7 +253,7 @@ class ContextEnricher:
         """Add intent classification results."""
         context.current_intent = intent
         context.set_confidence("intent", confidence)
-    
+
     @staticmethod
     def enrich_with_clarification(
         context: OrchestrationContext,
@@ -259,7 +263,7 @@ class ContextEnricher:
         """Add clarification requirement."""
         context.requires_clarification = requires_clarification
         context.clarification_question = question
-    
+
     @staticmethod
     def enrich_with_escalation(
         context: OrchestrationContext,
@@ -269,7 +273,7 @@ class ContextEnricher:
         """Add escalation decision."""
         context.escalate_to_human = should_escalate
         context.escalation_reason = reason
-    
+
     @staticmethod
     def enrich_with_execution_result(
         context: OrchestrationContext,

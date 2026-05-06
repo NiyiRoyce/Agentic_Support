@@ -11,6 +11,7 @@ from llm.providers.base import LLMResponse
 @dataclass
 class FallbackConfig:
     """Configuration for fallback behavior."""
+
     max_retries: int = 3
     initial_delay: float = 1.0
     max_delay: float = 60.0
@@ -72,12 +73,13 @@ class FallbackHandler:
     def _calculate_delay(self, attempt: int) -> float:
         """Calculate backoff delay with optional jitter."""
         delay = min(
-            self.config.initial_delay * (self.config.exponential_base ** attempt),
+            self.config.initial_delay * (self.config.exponential_base**attempt),
             self.config.max_delay,
         )
 
         if self.config.jitter:
             import random
+
             delay *= random.uniform(0.5, 1.5)
 
         return delay

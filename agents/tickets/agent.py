@@ -11,7 +11,8 @@ class TicketsAgent(BaseAgent):
         super().__init__(
             llm_router=llm_router,
             agent_type=AgentType.TICKETS,
-            default_config=default_config or LLMConfig(
+            default_config=default_config
+            or LLMConfig(
                 model="gpt-4o-mini",
                 temperature=0.5,
                 max_tokens=600,
@@ -19,29 +20,27 @@ class TicketsAgent(BaseAgent):
             ),
         )
         self.prompts = TicketPrompts()
-    
-    async def execute(self, user_message: str, context: AgentContext,
-                     **kwargs) -> AgentResult:
+
+    async def execute(
+        self, user_message: str, context: AgentContext, **kwargs
+    ) -> AgentResult:
         prompt = self.build_prompt(user_message, context)
         messages = [
             LLMMessage(role="system", content=self.prompts.SYSTEM_PROMPT),
             LLMMessage(role="user", content=prompt),
         ]
-        
+
         response = await self._call_llm(messages)
         is_valid, parsed, error = self._parse_llm_json(response, TicketAgentOutput)
-        
+
         if not is_valid:
             return self._create_error_result(f"Parse error: {error}")
-        
+
         return self._create_success_result(
-            data=parsed,
-            confidence=0.85,
-            reasoning="Ticket details generated"
+            data=parsed, confidence=0.85, reasoning="Ticket details generated"
         )
-    
+
     def build_prompt(self, user_message: str, context: AgentContext, **kwargs) -> str:
         return self.prompts.build_ticket_creation_prompt(
-            issue=user_message,
-            user_info=context.user_metadata
+            issue=user_message, user_info=context.user_metadata
         )

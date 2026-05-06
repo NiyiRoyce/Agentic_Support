@@ -7,6 +7,7 @@ from enum import Enum
 
 class PromptVersion(str, Enum):
     """Prompt versions for A/B testing."""
+
     V1 = "v1"
     V2 = "v2"
     STABLE = "stable"
@@ -16,6 +17,7 @@ class PromptVersion(str, Enum):
 @dataclass
 class PromptMetadata:
     """Metadata for a prompt template."""
+
     name: str
     version: PromptVersion
     description: str
@@ -67,7 +69,9 @@ class PromptRegistry:
             return None
 
         # Use specified version or active version
-        version_key = version or self._active_versions.get(name, PromptVersion.STABLE.value)
+        version_key = version or self._active_versions.get(
+            name, PromptVersion.STABLE.value
+        )
 
         return self._prompts[name].get(version_key)
 
@@ -84,10 +88,7 @@ class PromptRegistry:
 
     def list_prompts(self) -> Dict[str, list]:
         """List all registered prompts and their versions."""
-        return {
-            name: list(versions.keys())
-            for name, versions in self._prompts.items()
-        }
+        return {name: list(versions.keys()) for name, versions in self._prompts.items()}
 
     def update_metrics(
         self,
@@ -113,9 +114,11 @@ def register_prompt(
     description: str = "",
 ):
     """Decorator to register a prompt template."""
+
     def decorator(func: Callable):
         _registry.register(name, version, func, description)
         return func
+
     return decorator
 
 

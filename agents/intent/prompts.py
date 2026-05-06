@@ -6,7 +6,7 @@ from typing import Dict, Any
 
 class IntentPrompts:
     """Prompt templates for intent classification."""
-    
+
     SYSTEM_PROMPT = """You are an intent classification system for a customer support AI agent.
 
 Your job is to analyze customer messages and determine their primary intent with high accuracy.
@@ -30,7 +30,7 @@ Guidelines:
 5. Extract relevant entities (order_id, product_name, etc.)
 
 You must respond ONLY with valid JSON, no other text."""
-    
+
     @staticmethod
     def build_user_prompt(
         user_message: str,
@@ -70,7 +70,7 @@ Respond with JSON in this exact format:
         """Build prompt for generating clarification question."""
         return f"""The user's message is ambiguous: "{user_message}"
 
-Possible intents: {', '.join(possible_intents)}
+Possible intents: {", ".join(possible_intents)}
 
 Generate a friendly, natural clarification question that helps determine the user's true intent.
 

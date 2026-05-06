@@ -10,7 +10,6 @@ from agents.intent.agent import IntentAgent
 from agents.base import AgentContext
 
 
-
 @pytest.fixture
 def failing_provider():
     """Create a provider that always fails."""
@@ -23,6 +22,7 @@ def failing_provider():
 def slow_provider():
     """Create a provider with slow responses."""
     provider = MockLLMProvider()
+
     async def slow_complete(*args, **kwargs):
         await asyncio.sleep(5)  # Simulate slow response
         return await original_complete(*args, **kwargs)
@@ -37,7 +37,9 @@ def slow_provider():
 def working_provider():
     """Create a working provider."""
     provider = MockLLMProvider()
-    provider.add_response('{"intent": "greeting", "confidence": 0.9, "reasoning": "Greeting detected", "requires_clarification": false}')
+    provider.add_response(
+        '{"intent": "greeting", "confidence": 0.9, "reasoning": "Greeting detected", "requires_clarification": false}'
+    )
     return provider
 
 
@@ -52,14 +54,12 @@ async def test_llm_router_fallback_on_failure():
 
     from llm.router import RouteConfig
 
-    router = LLMRouter({
-        LLMProvider.OPENAI: failing_primary,
-        LLMProvider.ANTHROPIC: working_fallback
-    })
+    router = LLMRouter(
+        {LLMProvider.OPENAI: failing_primary, LLMProvider.ANTHROPIC: working_fallback}
+    )
 
     config = RouteConfig(
-        primary_provider=LLMProvider.OPENAI,
-        fallback_providers=[LLMProvider.ANTHROPIC]
+        primary_provider=LLMProvider.OPENAI, fallback_providers=[LLMProvider.ANTHROPIC]
     )
 
     from llm import LLMMessage
@@ -103,6 +103,7 @@ async def test_timeout_handling():
     """Test timeout handling for slow providers."""
     slow_provider = MockLLMProvider()
     original_slow_complete = slow_provider.complete
+
     async def slow_complete(*args, **kwargs):
         await asyncio.sleep(10)  # Longer than timeout
         return await original_slow_complete(*args, **kwargs)
@@ -119,9 +120,9 @@ async def test_timeout_handling():
     response = await router.complete(messages, llm_config)
 
     # May fail due to timeout, or succeed if provider ignores timeout.
-    assert (
-        response.success
-        or (response.error and ("timeout" in response.error.lower() or "failed" in response.error.lower()))
+    assert response.success or (
+        response.error
+        and ("timeout" in response.error.lower() or "failed" in response.error.lower())
     )
 
 
@@ -140,7 +141,7 @@ async def test_memory_store_resilience():
         user_id="user-1",
         messages=[msg],
         created_at=datetime.now(),
-        updated_at=datetime.now()
+        updated_at=datetime.now(),
     )
 
     result = await store.save_session(valid_session)
@@ -159,7 +160,7 @@ async def test_knowledge_base_fallback():
     embedder = MockEmbedder()
     retriever = KnowledgeRetriever(
         vector_store=ChromaVectorStore(persist_directory="/tmp/nonexistent"),
-        embedder=embedder
+        embedder=embedder,
     )
 
     # This should handle the error gracefully

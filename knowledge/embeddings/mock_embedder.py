@@ -21,16 +21,16 @@ class MockEmbedder(Embedder):
             # Create deterministic embedding based on text hash
             hash_obj = hashlib.md5(text.encode())
             hash_int = int(hash_obj.hexdigest(), 16)
-            
+
             # Generate pseudo-random but deterministic vector
             embedding = []
             for i in range(self._dimension):
                 # Use hash to seed a simple PRNG-like sequence
                 value = ((hash_int + i) % 1000) / 500.0 - 1.0  # Range [-1, 1]
                 embedding.append(value)
-            
+
             embeddings.append(embedding)
-        
+
         return embeddings
 
     async def embed_query(self, query: str) -> List[float]:

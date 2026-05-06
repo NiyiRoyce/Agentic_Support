@@ -40,14 +40,14 @@ async def chat(
 ) -> ChatResponse:
     """
     Process user message through orchestration pipeline.
-    
+
     Args:
         request: Chat request with user message
         orchestrator: Orchestration router
         memory: Memory manager
         api_key: Verified API key
         context: Request context
-        
+
     Returns:
         ChatResponse with AI-generated response
     """
@@ -55,22 +55,21 @@ async def chat(
         # Extract context
         user_id = request.user_id or context.get("user_id")
         session_id = request.session_id or context.get("session_id")
-        
+
         # Create session if needed
         if not session_id:
             session = await memory.create_session(
-                user_id=user_id,
-                metadata=request.metadata or {}
+                user_id=user_id, metadata=request.metadata or {}
             )
             session_id = session.session_id
             logger.info(f"Created new session: {session_id}")
-        
+
         # Get conversation history
         conversation_history = await memory.get_context_for_llm(
             session_id=session_id,
             max_messages=10,
         )
-        
+
         # Add user message to memory
         await memory.add_message(
             session_id=session_id,
@@ -78,7 +77,7 @@ async def chat(
             content=request.message,
             metadata=request.metadata,
         )
-        
+
         # Process through orchestration
         result = await orchestrator.process_request(
             user_message=request.message,
@@ -87,7 +86,7 @@ async def chat(
             conversation_history=conversation_history,
             user_metadata=request.metadata or {},
         )
-        
+
         # Save assistant response to memory
         if result["success"] and not result.get("requires_clarification"):
             await memory.add_message(
@@ -98,9 +97,9 @@ async def chat(
                     "intent": result.get("intent"),
                     "confidence": result.get("confidence"),
                     "request_id": result["metadata"]["request_id"],
-                }
+                },
             )
-        
+
         # Build response
         return ChatResponse(
             success=result["success"],
@@ -114,14 +113,14 @@ async def chat(
             metadata={
                 **result.get("metadata", {}),
                 "session_id": session_id,
-            }
+            },
         )
-    
+
     except Exception as e:
         logger.error(f"Error processing chat request: {e}", exc_info=True)
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Failed to process message: {str(e)}"
+            detail=f"Failed to process message: {str(e)}",
         )
 
 
@@ -136,11 +135,11 @@ async def chat_stream(
 ):
     """
     Stream chat response (placeholder for future implementation).
-    
+
     This endpoint will support streaming responses using Server-Sent Events (SSE)
     or WebSocket for real-time AI responses.
     """
     raise HTTPException(
         status_code=status.HTTP_501_NOT_IMPLEMENTED,
-        detail="Streaming chat is not yet implemented"
+        detail="Streaming chat is not yet implemented",
     )

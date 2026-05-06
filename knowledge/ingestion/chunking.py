@@ -49,7 +49,7 @@ class TextChunker:
     def chunk_by_sentences(self, text: str, max_sentences: int = 5) -> List[str]:
         """Chunk text by sentence boundaries."""
         # Simple sentence splitting (can be improved with NLP)
-        sentences = re.split(r'(?<=[.!?])\s+', text.strip())
+        sentences = re.split(r"(?<=[.!?])\s+", text.strip())
 
         chunks = []
         current_chunk = []
@@ -58,13 +58,13 @@ class TextChunker:
             current_chunk.append(sentence)
 
             if len(current_chunk) >= max_sentences:
-                chunks.append(' '.join(current_chunk))
+                chunks.append(" ".join(current_chunk))
                 # Keep some overlap
                 overlap_count = min(2, len(current_chunk) // 2)
                 current_chunk = current_chunk[-overlap_count:]
 
         # Add remaining sentences
         if current_chunk:
-            chunks.append(' '.join(current_chunk))
+            chunks.append(" ".join(current_chunk))
 
         return chunks

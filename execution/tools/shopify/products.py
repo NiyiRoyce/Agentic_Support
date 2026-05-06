@@ -1,5 +1,6 @@
 # shopify products helper
 """Shopify product tools"""
+
 from typing import Dict, Any, Optional
 from datetime import datetime
 import logging
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class ShopifySearchProductsTool(BaseTool):
     """Search Shopify products"""
-    
+
     def __init__(self):
         super().__init__(
             name="shopify_search_products",
@@ -24,35 +25,34 @@ class ShopifySearchProductsTool(BaseTool):
             timeout_seconds=30,
             idempotent=True,
         )
-    
+
     async def execute(
         self,
         params: Dict[str, Any],
         context: Optional[ExecutionContext] = None,
     ) -> ToolResult:
         start_time = datetime.utcnow()
-        
+
         try:
             client = ShopifyClient(
                 shop_name=params["shop_name"],
                 access_token=params["access_token"],
             )
-            
+
             query = params.get("query", "")
             limit = params.get("limit", 10)
-            
+
             # Search products
             response = await client.get(
-                "products",
-                params={"title": query, "limit": limit}
+                "products", params={"title": query, "limit": limit}
             )
-            
+
             products = response.get("products", [])
-            
+
             await client.close()
-            
+
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.SUCCESS,
@@ -62,18 +62,18 @@ class ShopifySearchProductsTool(BaseTool):
                 },
                 execution_time_ms=execution_time,
             )
-            
+
         except Exception as e:
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
             logger.error(f"Failed to search Shopify products: {e}")
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.FAILED,
                 error=str(e),
                 execution_time_ms=execution_time,
             )
-    
+
     def get_parameter_schema(self) -> Dict[str, Any]:
         return {
             "type": "object",
@@ -94,7 +94,7 @@ class ShopifySearchProductsTool(BaseTool):
 
 class ShopifyGetProductTool(BaseTool):
     """Get Shopify product by ID"""
-    
+
     def __init__(self):
         super().__init__(
             name="shopify_get_product",
@@ -104,30 +104,30 @@ class ShopifyGetProductTool(BaseTool):
             timeout_seconds=30,
             idempotent=True,
         )
-    
+
     async def execute(
         self,
         params: Dict[str, Any],
         context: Optional[ExecutionContext] = None,
     ) -> ToolResult:
         start_time = datetime.utcnow()
-        
+
         try:
             client = ShopifyClient(
                 shop_name=params["shop_name"],
                 access_token=params["access_token"],
             )
-            
+
             product_id = params["product_id"]
-            
+
             # Get product
             response = await client.get(f"products/{product_id}")
             product = response.get("product", {})
-            
+
             await client.close()
-            
+
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.SUCCESS,
@@ -136,22 +136,24 @@ class ShopifyGetProductTool(BaseTool):
                     "product_id": product.get("id"),
                     "title": product.get("title"),
                     "price": product.get("variants", [{}])[0].get("price"),
-                    "inventory": product.get("variants", [{}])[0].get("inventory_quantity"),
+                    "inventory": product.get("variants", [{}])[0].get(
+                        "inventory_quantity"
+                    ),
                 },
                 execution_time_ms=execution_time,
             )
-            
+
         except Exception as e:
             execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
             logger.error(f"Failed to get Shopify product: {e}")
-            
+
             return ToolResult(
                 tool_name=self.name,
                 status=ToolStatus.FAILED,
                 error=str(e),
                 execution_time_ms=execution_time,
             )
-    
+
     def get_parameter_schema(self) -> Dict[str, Any]:
         return {
             "type": "object",

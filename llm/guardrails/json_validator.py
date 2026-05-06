@@ -18,17 +18,17 @@ class JSONValidator:
         Extract JSON from text that may contain markdown code blocks or extra text.
         """
         # Try to find JSON in markdown code blocks
-        json_match = re.search(r'```json\s*(\{.*?\})\s*```', text, re.DOTALL)
+        json_match = re.search(r"```json\s*(\{.*?\})\s*```", text, re.DOTALL)
         if json_match:
             return json_match.group(1)
 
         # Try to find JSON in regular code blocks
-        json_match = re.search(r'```\s*(\{.*?\})\s*```', text, re.DOTALL)
+        json_match = re.search(r"```\s*(\{.*?\})\s*```", text, re.DOTALL)
         if json_match:
             return json_match.group(1)
 
         # Try to find raw JSON object
-        json_match = re.search(r'\{.*\}', text, re.DOTALL)
+        json_match = re.search(r"\{.*\}", text, re.DOTALL)
         if json_match:
             return json_match.group(0)
 
@@ -83,13 +83,13 @@ class JSONValidator:
         # Common repairs
         repairs = [
             # Add missing closing braces
-            lambda s: s + '}' * (s.count('{') - s.count('}')),
+            lambda s: s + "}" * (s.count("{") - s.count("}")),
             # Add missing closing brackets
-            lambda s: s + ']' * (s.count('[') - s.count(']')),
+            lambda s: s + "]" * (s.count("[") - s.count("]")),
             # Remove trailing commas
-            lambda s: re.sub(r',\s*([}\]])', r'\1', s),
+            lambda s: re.sub(r",\s*([}\]])", r"\1", s),
             # Fix unquoted keys
-            lambda s: re.sub(r'(\w+):', r'"\1":', s),
+            lambda s: re.sub(r"(\w+):", r'"\1":', s),
         ]
 
         for repair_func in repairs:

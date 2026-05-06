@@ -23,14 +23,13 @@ class ChromaVectorStore(VectorStore):
 
         # Initialize ChromaDB client
         self.client = chromadb.PersistentClient(
-            path=persist_directory,
-            settings=Settings(anonymized_telemetry=False)
+            path=persist_directory, settings=Settings(anonymized_telemetry=False)
         )
 
         # Get or create collection
         self.collection = self.client.get_or_create_collection(
             name=collection_name,
-            metadata={"description": "AI Support Agent Knowledge Base"}
+            metadata={"description": "AI Support Agent Knowledge Base"},
         )
 
     async def add_documents(self, documents: List[Document]) -> bool:
@@ -49,7 +48,7 @@ class ChromaVectorStore(VectorStore):
                     embeddings=embeddings,
                     metadatas=metadatas,
                     documents=documents_text,
-                )
+                ),
             )
             return True
         except Exception as e:
@@ -71,8 +70,8 @@ class ChromaVectorStore(VectorStore):
                     query_embeddings=[query_embedding],
                     n_results=limit,
                     where=metadata_filter,
-                    include=["documents", "metadatas", "distances"]
-                )
+                    include=["documents", "metadatas", "distances"],
+                ),
             )
 
             search_results = []
@@ -101,8 +100,7 @@ class ChromaVectorStore(VectorStore):
         """Delete documents by IDs."""
         try:
             await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: self.collection.delete(ids=document_ids)
+                None, lambda: self.collection.delete(ids=document_ids)
             )
             return True
         except Exception as e:
@@ -119,9 +117,7 @@ class ChromaVectorStore(VectorStore):
     async def clear(self) -> bool:
         """Clear all documents."""
         try:
-            await asyncio.get_event_loop().run_in_executor(
-                None, self.collection.delete
-            )
+            await asyncio.get_event_loop().run_in_executor(None, self.collection.delete)
             return True
         except Exception as e:
             print(f"Error clearing collection: {e}")
@@ -132,12 +128,14 @@ class ChromaVectorStore(VectorStore):
         try:
             results = await asyncio.get_event_loop().run_in_executor(
                 None,
-                lambda: self.collection.get(include=["documents", "metadatas", "embeddings"])
+                lambda: self.collection.get(
+                    include=["documents", "metadatas", "embeddings"]
+                ),
             )
 
             documents = []
             ids = results.get("ids") if isinstance(results, dict) else None
-            if ids is not None and hasattr(ids, '__len__') and len(ids) > 0:
+            if ids is not None and hasattr(ids, "__len__") and len(ids) > 0:
                 # Normalize possible numpy arrays to lists
                 try:
                     ids_iter = list(ids)
@@ -149,7 +147,11 @@ class ChromaVectorStore(VectorStore):
                         id=doc_id,
                         content=results["documents"][i],
                         metadata=results["metadatas"][i],
-                        embedding=(results.get("embeddings")[i] if results.get("embeddings") else None),
+                        embedding=(
+                            results.get("embeddings")[i]
+                            if results.get("embeddings")
+                            else None
+                        ),
                     )
                     documents.append(doc)
 
@@ -165,8 +167,7 @@ class ChromaVectorStore(VectorStore):
             embeddings = [doc.embedding for doc in documents if doc.embedding]
 
             await asyncio.get_event_loop().run_in_executor(
-                None,
-                lambda: self.collection.update(ids=ids, embeddings=embeddings)
+                None, lambda: self.collection.update(ids=ids, embeddings=embeddings)
             )
             return True
         except Exception as e:

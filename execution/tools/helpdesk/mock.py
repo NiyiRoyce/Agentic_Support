@@ -1,5 +1,6 @@
 # mock helpdesk (for testing)
 """Mock helpdesk tool for testing"""
+
 from typing import Dict, Any, Optional
 from datetime import datetime
 import random
@@ -14,7 +15,7 @@ logger = logging.getLogger(__name__)
 
 class MockHelpdeskTool(BaseTool):
     """Mock helpdesk tool for testing without external dependencies"""
-    
+
     def __init__(self):
         super().__init__(
             name="mock_helpdesk_create_ticket",
@@ -24,23 +25,24 @@ class MockHelpdeskTool(BaseTool):
             timeout_seconds=5,
             idempotent=False,
         )
-    
+
     async def execute(
         self,
         params: Dict[str, Any],
         context: Optional[ExecutionContext] = None,
     ) -> ToolResult:
         start_time = datetime.utcnow()
-        
+
         # Simulate processing time
         import asyncio
+
         await asyncio.sleep(random.uniform(0.1, 0.5))
-        
+
         # Generate mock ticket
         ticket_id = f"MOCK-{random.randint(1000, 9999)}"
-        
+
         execution_time = (datetime.utcnow() - start_time).total_seconds() * 1000
-        
+
         return ToolResult(
             tool_name=self.name,
             status=ToolStatus.SUCCESS,
@@ -53,7 +55,7 @@ class MockHelpdeskTool(BaseTool):
             },
             execution_time_ms=execution_time,
         )
-    
+
     def get_parameter_schema(self) -> Dict[str, Any]:
         return {
             "type": "object",

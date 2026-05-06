@@ -8,11 +8,12 @@ from dataclasses import dataclass
 from enum import Enum
 import random
 
-T = TypeVar('T')
+T = TypeVar("T")
 
 
 class RetryStrategy(str, Enum):
     """Available retry strategies."""
+
     EXPONENTIAL = "exponential"
     LINEAR = "linear"
     CONSTANT = "constant"
@@ -21,6 +22,7 @@ class RetryStrategy(str, Enum):
 
 class RetryError(Exception):
     """Raised when all retry attempts are exhausted."""
+
     def __init__(self, message: str, attempts: int, last_error: Exception):
         self.message = message
         self.attempts = attempts
@@ -31,6 +33,7 @@ class RetryError(Exception):
 @dataclass
 class RetryConfig:
     """Configuration for retry behavior."""
+
     max_attempts: int = 3
     strategy: RetryStrategy = RetryStrategy.EXPONENTIAL
     initial_delay: float = 1.0
@@ -38,7 +41,7 @@ class RetryConfig:
     multiplier: float = 2.0
     jitter: bool = True
     jitter_range: tuple = (0.8, 1.2)
-    
+
     # Retry only on specific errors
     retry_on_errors: Optional[List[type]] = None
     # Don't retry on specific errors
@@ -64,24 +67,26 @@ class RetryHandler:
         Execute function with retry logic.
         """
         last_error = None
-        
+
         for attempt in range(1, self.config.max_attempts + 1):
             try:
                 # Record attempt
-                self._attempt_history.append({
-                    'attempt': attempt,
-                    'timestamp': time.time(),
-                })
+                self._attempt_history.append(
+                    {
+                        "attempt": attempt,
+                        "timestamp": time.time(),
+                    }
+                )
 
                 # Execute function
                 result = await func(*args, **kwargs)
-                
+
                 # Success - return result
                 return result
 
             except Exception as e:
                 last_error = e
-                
+
                 # Check if we should retry this error
                 if not self._should_retry(e):
                     raise e
@@ -110,12 +115,17 @@ class RetryHandler:
 
         # Check no-retry list first (takes precedence)
         if self.config.no_retry_on_errors:
-            if any(isinstance(error, err_type) for err_type in self.config.no_retry_on_errors):
+            if any(
+                isinstance(error, err_type)
+                for err_type in self.config.no_retry_on_errors
+            ):
                 return False
 
         # Check retry list
         if self.config.retry_on_errors:
-            return any(isinstance(error, err_type) for err_type in self.config.retry_on_errors)
+            return any(
+                isinstance(error, err_type) for err_type in self.config.retry_on_errors
+            )
 
         # Default: retry on most errors
         return True
@@ -129,7 +139,9 @@ class RetryHandler:
             delay = self.config.initial_delay * attempt
 
         elif self.config.strategy == RetryStrategy.EXPONENTIAL:
-            delay = self.config.initial_delay * (self.config.multiplier ** (attempt - 1))
+            delay = self.config.initial_delay * (
+                self.config.multiplier ** (attempt - 1)
+            )
 
         elif self.config.strategy == RetryStrategy.FIBONACCI:
             delay = self._fibonacci_delay(attempt)
@@ -151,11 +163,11 @@ class RetryHandler:
         """Calculate Fibonacci sequence delay."""
         if n <= 2:
             return self.config.initial_delay
-        
+
         fib_prev, fib_curr = 1, 1
         for _ in range(n - 2):
             fib_prev, fib_curr = fib_curr, fib_prev + fib_curr
-        
+
         return self.config.initial_delay * fib_curr
 
     def get_attempt_history(self) -> List[dict]:
@@ -190,9 +202,9 @@ class AdaptiveRetry:
         """
         # Get adapted config for this error category
         config = self._get_adapted_config(error_category)
-        
+
         handler = RetryHandler(config)
-        
+
         try:
             result = await handler.execute(func, *args, **kwargs)
             self._record_success(error_category)
@@ -215,12 +227,12 @@ class AdaptiveRetry:
         # Adapt based on historical data
         if category in self._error_counts:
             error_rate = self._error_counts[category] / max(1, self._total_attempts)
-            
+
             # If error rate is high, increase delays
             if error_rate > 0.5:
                 config.initial_delay *= 1.5
                 config.max_delay *= 1.5
-            
+
             # If error rate is very high, reduce attempts (fail faster)
             if error_rate > 0.8:
                 config.max_attempts = max(2, config.max_attempts - 1)
@@ -240,9 +252,9 @@ class AdaptiveRetry:
     def get_stats(self) -> dict:
         """Get retry statistics."""
         return {
-            'total_attempts': self._total_attempts,
-            'error_counts': self._error_counts.copy(),
-            'success_counts': self._success_counts.copy(),
+            "total_attempts": self._total_attempts,
+            "error_counts": self._error_counts.copy(),
+            "success_counts": self._success_counts.copy(),
         }
 
 
@@ -281,16 +293,18 @@ class RateLimitRetry:
 
             except Exception as e:
                 error_msg = str(e).lower()
-                
+
                 # Detect rate limit errors
                 if "rate limit" in error_msg or "429" in error_msg:
-                    delay = self._parse_retry_after(error_msg) or (self.base_delay * (2 ** attempt))
+                    delay = self._parse_retry_after(error_msg) or (
+                        self.base_delay * (2**attempt)
+                    )
                     self._set_rate_limit(provider, delay)
-                    
+
                     if attempt < self.max_attempts:
                         await asyncio.sleep(delay)
                         continue
-                
+
                 # Non-rate-limit error
                 raise e
 
@@ -303,7 +317,8 @@ class RateLimitRetry:
     def _parse_retry_after(self, error_msg: str) -> Optional[float]:
         """Parse retry-after header from error message."""
         import re
-        match = re.search(r'retry after (\d+)', error_msg)
+
+        match = re.search(r"retry after (\d+)", error_msg)
         if match:
             return float(match.group(1))
         return None

@@ -16,10 +16,12 @@ class DocumentIngestor:
         """Initialize ingestor."""
         self.chunker = chunker or TextChunker()
 
-    def ingest_text_file(self, file_path: str, metadata: Optional[Dict[str, Any]] = None) -> List[Document]:
+    def ingest_text_file(
+        self, file_path: str, metadata: Optional[Dict[str, Any]] = None
+    ) -> List[Document]:
         """Ingest a text file."""
         try:
-            with open(file_path, 'r', encoding='utf-8') as f:
+            with open(file_path, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Get file metadata
@@ -48,7 +50,7 @@ class DocumentIngestor:
                         **file_metadata,
                         "chunk_index": i,
                         "total_chunks": len(chunks),
-                    }
+                    },
                 )
                 documents.append(doc)
 
@@ -58,7 +60,12 @@ class DocumentIngestor:
             print(f"Error ingesting file {file_path}: {e}")
             return []
 
-    def ingest_directory(self, directory_path: str, file_pattern: str = "*.txt", metadata: Optional[Dict[str, Any]] = None) -> List[Document]:
+    def ingest_directory(
+        self,
+        directory_path: str,
+        file_pattern: str = "*.txt",
+        metadata: Optional[Dict[str, Any]] = None,
+    ) -> List[Document]:
         """Ingest all files in a directory matching the pattern."""
         path = Path(directory_path)
         if not path.exists() or not path.is_dir():
@@ -74,7 +81,9 @@ class DocumentIngestor:
 
         return all_documents
 
-    def ingest_text_content(self, content: str, source_id: str, metadata: Optional[Dict[str, Any]] = None) -> List[Document]:
+    def ingest_text_content(
+        self, content: str, source_id: str, metadata: Optional[Dict[str, Any]] = None
+    ) -> List[Document]:
         """Ingest raw text content."""
         content_metadata = {
             "source": source_id,
@@ -98,7 +107,7 @@ class DocumentIngestor:
                     **content_metadata,
                     "chunk_index": i,
                     "total_chunks": len(chunks),
-                }
+                },
             )
             documents.append(doc)
 

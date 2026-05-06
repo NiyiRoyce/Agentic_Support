@@ -9,6 +9,7 @@ import time
 
 class DegradationLevel(str, Enum):
     """Levels of service degradation."""
+
     FULL = "full"  # Full LLM capabilities
     REDUCED = "reduced"  # Limited LLM with more constraints
     FALLBACK = "fallback"  # Template-based responses
@@ -19,10 +20,11 @@ class DegradationLevel(str, Enum):
 @dataclass
 class DegradationConfig:
     """Configuration for graceful degradation."""
+
     failure_threshold: int = 3  # Failures before degrading
     recovery_threshold: int = 2  # Successes before upgrading
     degradation_timeout: int = 300  # Seconds before attempting recovery
-    
+
     # Enable/disable specific degradation levels
     enable_reduced: bool = True
     enable_fallback: bool = True
@@ -32,6 +34,7 @@ class DegradationConfig:
 @dataclass
 class DegradationState:
     """Current degradation state."""
+
     level: DegradationLevel
     failure_count: int
     success_count: int
@@ -56,10 +59,10 @@ class GracefulDegradation:
             last_success_time=None,
             metadata={},
         )
-        
+
         # Fallback response templates
         self._fallback_templates = self._initialize_fallback_templates()
-        
+
         # Keyword-based minimal responses
         self._keyword_responses = self._initialize_keyword_responses()
 
@@ -79,28 +82,44 @@ class GracefulDegradation:
         """Initialize keyword-based minimal responses."""
         return {
             "order": [
-                (["order", "tracking", "delivery", "shipped"], 
-                 "To check your order status, please visit our order tracking page or contact support with your order number."),
-                (["cancel", "return", "refund"],
-                 "For cancellations, returns, or refunds, please contact our support team at support@example.com"),
+                (
+                    ["order", "tracking", "delivery", "shipped"],
+                    "To check your order status, please visit our order tracking page or contact support with your order number.",
+                ),
+                (
+                    ["cancel", "return", "refund"],
+                    "For cancellations, returns, or refunds, please contact our support team at support@example.com",
+                ),
             ],
             "product": [
-                (["price", "cost", "how much"],
-                 "For current pricing, please visit our website or contact our sales team."),
-                (["available", "stock", "in stock"],
-                 "To check product availability, please visit our website or contact support."),
+                (
+                    ["price", "cost", "how much"],
+                    "For current pricing, please visit our website or contact our sales team.",
+                ),
+                (
+                    ["available", "stock", "in stock"],
+                    "To check product availability, please visit our website or contact support.",
+                ),
             ],
             "account": [
-                (["login", "password", "reset"],
-                 "For login or password issues, please use the 'Forgot Password' link on the login page."),
-                (["account", "profile", "settings"],
-                 "To manage your account, please log in to your dashboard."),
+                (
+                    ["login", "password", "reset"],
+                    "For login or password issues, please use the 'Forgot Password' link on the login page.",
+                ),
+                (
+                    ["account", "profile", "settings"],
+                    "To manage your account, please log in to your dashboard.",
+                ),
             ],
             "general": [
-                (["help", "support", "assist"],
-                 "I'm here to help! Please describe your issue and I'll do my best to assist you."),
-                (["thank", "thanks"],
-                 "You're welcome! Let me know if you need anything else."),
+                (
+                    ["help", "support", "assist"],
+                    "I'm here to help! Please describe your issue and I'll do my best to assist you.",
+                ),
+                (
+                    ["thank", "thanks"],
+                    "You're welcome! Let me know if you need anything else.",
+                ),
             ],
         }
 
@@ -121,16 +140,18 @@ class GracefulDegradation:
         # Execute based on current degradation level
         if self.state.level == DegradationLevel.FULL:
             return await self._execute_full(func, intent, user_message, *args, **kwargs)
-        
+
         elif self.state.level == DegradationLevel.REDUCED:
-            return await self._execute_reduced(func, intent, user_message, *args, **kwargs)
-        
+            return await self._execute_reduced(
+                func, intent, user_message, *args, **kwargs
+            )
+
         elif self.state.level == DegradationLevel.FALLBACK:
             return self._execute_fallback(intent, user_message)
-        
+
         elif self.state.level == DegradationLevel.MINIMAL:
             return self._execute_minimal(user_message)
-        
+
         else:  # OFFLINE
             return self._execute_offline()
 
@@ -149,7 +170,7 @@ class GracefulDegradation:
             return result
         except Exception as e:
             self._record_failure()
-            
+
             # If degraded, use fallback
             if self.state.level != DegradationLevel.FULL:
                 return await self.execute(func, intent, user_message, *args, **kwargs)
@@ -166,27 +187,29 @@ class GracefulDegradation:
         """Execute with reduced LLM capabilities (shorter timeouts, simpler prompts)."""
         try:
             # Modify kwargs to use reduced capabilities
-            if 'config' in kwargs and hasattr(kwargs['config'], 'max_tokens'):
-                kwargs['config'].max_tokens = min(kwargs['config'].max_tokens, 500)
-                kwargs['config'].timeout = 15  # Shorter timeout
+            if "config" in kwargs and hasattr(kwargs["config"], "max_tokens"):
+                kwargs["config"].max_tokens = min(kwargs["config"].max_tokens, 500)
+                kwargs["config"].timeout = 15  # Shorter timeout
 
             result = await func(*args, **kwargs)
             self._record_success()
             return result
         except Exception:
             self._record_failure()
-            
+
             # If further degraded, use fallback
             if self.state.level != DegradationLevel.REDUCED:
                 return await self.execute(func, intent, user_message, *args, **kwargs)
-            
+
             # Otherwise return fallback directly
             return self._execute_fallback(intent, user_message)
 
     def _execute_fallback(self, intent: str, user_message: str) -> Dict[str, Any]:
         """Execute with template-based fallback."""
-        template = self._fallback_templates.get(intent, self._fallback_templates["unknown"])
-        
+        template = self._fallback_templates.get(
+            intent, self._fallback_templates["unknown"]
+        )
+
         return {
             "content": template,
             "degraded": True,
@@ -194,13 +217,13 @@ class GracefulDegradation:
             "metadata": {
                 "used_template": True,
                 "intent": intent,
-            }
+            },
         }
 
     def _execute_minimal(self, user_message: str) -> Dict[str, Any]:
         """Execute with minimal keyword-based matching."""
         message_lower = user_message.lower()
-        
+
         # Try to match keywords
         for category, patterns in self._keyword_responses.items():
             for keywords, response in patterns:
@@ -212,9 +235,9 @@ class GracefulDegradation:
                         "metadata": {
                             "matched_category": category,
                             "matched_keywords": keywords,
-                        }
+                        },
                     }
-        
+
         # No match found
         return {
             "content": self._fallback_templates["unknown"],
@@ -222,7 +245,7 @@ class GracefulDegradation:
             "degradation_level": DegradationLevel.MINIMAL.value,
             "metadata": {
                 "no_match": True,
-            }
+            },
         }
 
     def _execute_offline(self) -> Dict[str, Any]:
@@ -233,7 +256,7 @@ class GracefulDegradation:
             "degradation_level": DegradationLevel.OFFLINE.value,
             "metadata": {
                 "system_offline": True,
-            }
+            },
         }
 
     def _record_success(self):
@@ -260,9 +283,20 @@ class GracefulDegradation:
         """Degrade to next lower service level."""
         if self.state.level == DegradationLevel.FULL and self.config.enable_reduced:
             self.state.level = DegradationLevel.REDUCED
-        elif self.state.level in [DegradationLevel.FULL, DegradationLevel.REDUCED] and self.config.enable_fallback:
+        elif (
+            self.state.level in [DegradationLevel.FULL, DegradationLevel.REDUCED]
+            and self.config.enable_fallback
+        ):
             self.state.level = DegradationLevel.FALLBACK
-        elif self.state.level in [DegradationLevel.FULL, DegradationLevel.REDUCED, DegradationLevel.FALLBACK] and self.config.enable_minimal:
+        elif (
+            self.state.level
+            in [
+                DegradationLevel.FULL,
+                DegradationLevel.REDUCED,
+                DegradationLevel.FALLBACK,
+            ]
+            and self.config.enable_minimal
+        ):
             self.state.level = DegradationLevel.MINIMAL
         else:
             self.state.level = DegradationLevel.OFFLINE
@@ -291,7 +325,7 @@ class GracefulDegradation:
 
         if self.state.last_failure_time:
             time_since_failure = time.time() - self.state.last_failure_time
-            
+
             if time_since_failure >= self.config.degradation_timeout:
                 # Attempt to upgrade one level
                 self._upgrade_service_level()

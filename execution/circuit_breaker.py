@@ -18,14 +18,16 @@ T = TypeVar("T")
 
 class CircuitState(str, Enum):
     """Circuit breaker states."""
-    CLOSED = "closed"      # Normal operation, requests pass through
-    OPEN = "open"          # Failing, requests rejected immediately
+
+    CLOSED = "closed"  # Normal operation, requests pass through
+    OPEN = "open"  # Failing, requests rejected immediately
     HALF_OPEN = "half_open"  # Testing recovery, limited requests allowed
 
 
 @dataclass
 class CircuitBreakerConfig:
     """Configuration for circuit breaker behavior."""
+
     failure_threshold: int = 5  # Failures before opening
     success_threshold: int = 2  # Successes in half-open before closing
     timeout: float = 60.0  # Seconds before attempting recovery from open state
@@ -35,23 +37,26 @@ class CircuitBreakerConfig:
 @dataclass
 class CircuitBreakerMetrics:
     """Metrics collected by circuit breaker."""
+
     total_calls: int = 0
     successful_calls: int = 0
     failed_calls: int = 0
     rejected_calls: int = 0
     last_failure_time: Optional[datetime] = None
     last_success_time: Optional[datetime] = None
-    state_changes: Dict[CircuitState, int] = field(default_factory=lambda: {
-        CircuitState.CLOSED: 0,
-        CircuitState.OPEN: 0,
-        CircuitState.HALF_OPEN: 0,
-    })
+    state_changes: Dict[CircuitState, int] = field(
+        default_factory=lambda: {
+            CircuitState.CLOSED: 0,
+            CircuitState.OPEN: 0,
+            CircuitState.HALF_OPEN: 0,
+        }
+    )
 
 
 class CircuitBreaker(Generic[T]):
     """
     Circuit breaker pattern implementation.
-    
+
     Protects against cascading failures by monitoring success/failure rates
     and temporarily disabling failing services.
     """
@@ -78,26 +83,24 @@ class CircuitBreaker(Generic[T]):
     ) -> T:
         """
         Execute function with circuit breaker protection.
-        
+
         Args:
             func: Async function to execute
             *args: Positional arguments
             **kwargs: Keyword arguments
-            
+
         Returns:
             Result from function
-            
+
         Raises:
             CircuitBreakerOpen: If circuit is open
         """
         async with self._state_lock:
             await self._check_state_transition()
-            
+
             if self.state == CircuitState.OPEN:
                 self.metrics.rejected_calls += 1
-                raise CircuitBreakerOpen(
-                    f"Circuit breaker '{self.name}' is OPEN"
-                )
+                raise CircuitBreakerOpen(f"Circuit breaker '{self.name}' is OPEN")
 
         try:
             result = await func(*args, **kwargs)
@@ -117,16 +120,14 @@ class CircuitBreaker(Generic[T]):
                     f"Circuit breaker '{self.name}' opened after "
                     f"{self.config.failure_threshold} failures"
                 )
-        
+
         elif self.state == CircuitState.OPEN:
             # Check if we should attempt half-open
             if self._should_attempt_half_open():
                 await self._transition_to(CircuitState.HALF_OPEN)
                 self._half_open_successes = 0
-                logger.info(
-                    f"Circuit breaker '{self.name}' entering HALF_OPEN state"
-                )
-        
+                logger.info(f"Circuit breaker '{self.name}' entering HALF_OPEN state")
+
         elif self.state == CircuitState.HALF_OPEN:
             # Check if we should fully close (recovery successful)
             if self._half_open_successes >= self.config.success_threshold:
@@ -143,32 +144,29 @@ class CircuitBreaker(Generic[T]):
             self.state = new_state
             self._last_state_change = datetime.utcnow()
             self.metrics.state_changes[new_state] += 1
-            logger.info(
-                f"Circuit breaker '{self.name}': {old_state} -> {new_state}"
-            )
+            logger.info(f"Circuit breaker '{self.name}': {old_state} -> {new_state}")
 
     def _should_open(self) -> bool:
         """Check if circuit should open."""
         if len(self._failure_stack) < self.config.failure_threshold:
             return False
-        
+
         # Check if failures are recent (within window)
         now = datetime.utcnow()
         recent_failures = sum(
-            1 for ts in self._failure_stack
+            1
+            for ts in self._failure_stack
             if (now - datetime.fromtimestamp(ts)).total_seconds() <= self.config.timeout
         )
-        
+
         return recent_failures >= self.config.failure_threshold
 
     def _should_attempt_half_open(self) -> bool:
         """Check if circuit should transition to half-open."""
         if self.state != CircuitState.OPEN:
             return False
-        
-        time_since_open = (
-            datetime.utcnow() - self._last_state_change
-        ).total_seconds()
+
+        time_since_open = (datetime.utcnow() - self._last_state_change).total_seconds()
         return time_since_open >= self.config.timeout
 
     async def _record_success(self) -> None:
@@ -176,10 +174,10 @@ class CircuitBreaker(Generic[T]):
         self.metrics.total_calls += 1
         self.metrics.successful_calls += 1
         self.metrics.last_success_time = datetime.utcnow()
-        
+
         if self.state == CircuitState.HALF_OPEN:
             self._half_open_successes += 1
-        
+
         async with self._state_lock:
             await self._check_state_transition()
 
@@ -188,17 +186,19 @@ class CircuitBreaker(Generic[T]):
         self.metrics.total_calls += 1
         self.metrics.failed_calls += 1
         self.metrics.last_failure_time = datetime.utcnow()
-        
+
         # Add current timestamp to failure stack
         self._failure_stack.append(datetime.utcnow().timestamp())
-        
+
         # Keep only recent failures within window
         now = datetime.utcnow()
         self._failure_stack = [
-            ts for ts in self._failure_stack
-            if (now - datetime.fromtimestamp(ts)).total_seconds() <= self.config.timeout * 2
+            ts
+            for ts in self._failure_stack
+            if (now - datetime.fromtimestamp(ts)).total_seconds()
+            <= self.config.timeout * 2
         ]
-        
+
         async with self._state_lock:
             await self._check_state_transition()
 
@@ -250,10 +250,7 @@ class CircuitBreakerManager:
 
     def get_all_metrics(self) -> Dict[str, CircuitBreakerMetrics]:
         """Get metrics from all circuit breakers."""
-        return {
-            name: breaker.get_metrics()
-            for name, breaker in self.breakers.items()
-        }
+        return {name: breaker.get_metrics() for name, breaker in self.breakers.items()}
 
     def reset_all(self) -> None:
         """Reset all circuit breakers."""
@@ -264,4 +261,5 @@ class CircuitBreakerManager:
 
 class CircuitBreakerOpen(Exception):
     """Raised when circuit breaker is open."""
+
     pass

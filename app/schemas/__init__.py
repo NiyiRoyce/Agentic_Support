@@ -27,5 +27,7 @@ from app.schemas.error import (
     NotFoundError as NotFoundError,
     InternalServerError as InternalServerError,
 )
-from app.schemas.pagination import PaginationParams as PaginationParams, PaginatedResponse as PaginatedResponse
-
+from app.schemas.pagination import (
+    PaginationParams as PaginationParams,
+    PaginatedResponse as PaginatedResponse,
+)

@@ -10,6 +10,7 @@ from datetime import datetime
 @dataclass
 class Document:
     """Represents a document chunk stored in the vector store."""
+
     id: str
     content: str
     metadata: Dict[str, Any]
@@ -20,6 +21,7 @@ class Document:
 @dataclass
 class SearchResult:
     """Result of a vector search."""
+
     document: Document
     score: float
 

@@ -9,6 +9,7 @@ from dataclasses import dataclass
 @dataclass
 class ContentFilterResult:
     """Result of content filtering."""
+
     is_safe: bool
     violations: List[str]
     sanitized_content: Optional[str] = None
@@ -22,10 +23,10 @@ class ContentFilter:
     def __init__(self):
         # Patterns for PII detection
         self.pii_patterns = {
-            "email": r'\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b',
-            "phone": r'\b(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b',
-            "ssn": r'\b\d{3}-\d{2}-\d{4}\b',
-            "credit_card": r'\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b',
+            "email": r"\b[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Z|a-z]{2,}\b",
+            "phone": r"\b(?:\+?1[-.\s]?)?\(?([0-9]{3})\)?[-.\s]?([0-9]{3})[-.\s]?([0-9]{4})\b",
+            "ssn": r"\b\d{3}-\d{2}-\d{4}\b",
+            "credit_card": r"\b\d{4}[\s-]?\d{4}[\s-]?\d{4}[\s-]?\d{4}\b",
         }
 
         # Prohibited content keywords (customize based on your policy)
@@ -113,7 +114,9 @@ class ContentFilter:
             "I cannot confirm",
         ]
 
-        return any(marker.lower() in content.lower() for marker in hallucination_markers)
+        return any(
+            marker.lower() in content.lower() for marker in hallucination_markers
+        )
 
     def validate_output_format(self, content: str, expected_format: str) -> bool:
         """
@@ -122,6 +125,7 @@ class ContentFilter:
         if expected_format == "json":
             try:
                 import json
+
                 json.loads(content)
                 return True
             except (json.JSONDecodeError, ValueError, TypeError):
@@ -129,7 +133,7 @@ class ContentFilter:
 
         elif expected_format == "markdown":
             # Basic markdown validation
-            return bool(re.search(r'[#*\-\[\]]', content))
+            return bool(re.search(r"[#*\-\[\]]", content))
 
         return True  # Default to true for unknown formats
 

@@ -1,10 +1,11 @@
 # prompts for escalation agent
 
+
 class EscalationPrompts:
     SYSTEM_PROMPT = """You are an escalation decision system.
     
     Determine if customer conversations need human agent intervention."""
-    
+
     @staticmethod
     def build_escalation_prompt(conversation_history: str) -> str:
         return f"""Evaluate if this conversation needs escalation to a human agent:
@@ -26,4 +27,3 @@ Respond with JSON:
   "department": "billing/technical/general",
   "handoff_notes": "brief context for human agent"
 }}"""
-

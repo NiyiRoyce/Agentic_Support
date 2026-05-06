@@ -1,5 +1,6 @@
 # Execute tools sequentially
 """Sequential execution strategy"""
+
 from typing import List
 import logging
 
@@ -13,7 +14,7 @@ logger = logging.getLogger(__name__)
 
 class SequentialStrategy:
     """Execute tools one after another"""
-    
+
     def __init__(
         self,
         registry: ToolRegistry,
@@ -21,7 +22,7 @@ class SequentialStrategy:
     ):
         self.registry = registry
         self.executor = executor
-    
+
     async def execute(
         self,
         tool_calls: List[ToolCall],
@@ -31,18 +32,18 @@ class SequentialStrategy:
     ) -> List[ToolResult]:
         """
         Execute tools sequentially
-        
+
         Args:
             tool_calls: List of tool calls
             context: Execution context
             stop_on_error: Stop execution on first error
             pass_results: Pass previous result to next tool
-            
+
         Returns:
             List of tool results
         """
         results = []
-        
+
         for i, tool_call in enumerate(tool_calls):
             tool = self.registry.get(tool_call.tool_name)
             if not tool:
@@ -50,10 +51,10 @@ class SequentialStrategy:
                 if stop_on_error:
                     break
                 continue
-            
+
             # Prepare parameters
             params = tool_call.params.copy()
-            
+
             # Pass previous result if configured
             if pass_results and i > 0 and results:
                 last_result = results[-1]
@@ -63,26 +64,24 @@ class SequentialStrategy:
                         f"Passing result from {last_result.tool_name} "
                         f"to {tool_call.tool_name}"
                     )
-            
+
             # Execute tool
             logger.info(
-                f"Executing tool {i+1}/{len(tool_calls)}: {tool_call.tool_name}"
+                f"Executing tool {i + 1}/{len(tool_calls)}: {tool_call.tool_name}"
             )
-            
+
             result = await self.executor.execute(
                 tool=tool,
                 params=params,
                 context=context,
             )
-            
+
             results.append(result)
             context.add_result(result)
-            
+
             # Check for errors
             if not result.success:
-                logger.warning(
-                    f"Tool {tool_call.tool_name} failed: {result.error}"
-                )
+                logger.warning(f"Tool {tool_call.tool_name} failed: {result.error}")
                 if stop_on_error:
                     logger.info("Stopping execution due to error")
                     break
@@ -91,5 +90,5 @@ class SequentialStrategy:
                     f"Tool {tool_call.tool_name} succeeded "
                     f"({result.execution_time_ms:.2f}ms)"
                 )
-        
+
         return results

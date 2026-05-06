@@ -40,8 +40,7 @@ class OpenAIProvider(BaseLLMProvider):
         try:
             # Convert messages to OpenAI format
             openai_messages = [
-                {"role": msg.role, "content": msg.content}
-                for msg in messages
+                {"role": msg.role, "content": msg.content} for msg in messages
             ]
 
             # Build request params

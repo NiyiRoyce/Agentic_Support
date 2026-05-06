@@ -1,5 +1,6 @@
 # Main execution dispatcher (executes plans)
 """Main execution dispatcher"""
+
 from typing import List, Optional, Dict, Any
 from datetime import datetime
 import asyncio
@@ -36,7 +37,7 @@ class ExecutionDispatcher:
     Main dispatcher for executing tools
     Coordinates between registry, executor, and strategies
     """
-    
+
     def __init__(
         self,
         registry: ToolRegistry,
@@ -48,14 +49,14 @@ class ExecutionDispatcher:
         max_concurrent: int = 10,
     ):
         self.registry = registry
-        
+
         # Initialize safety components
         self.circuit_breaker = circuit_breaker or CircuitBreaker()
         self.retry_strategy = retry_strategy or RetryStrategy()
         self.rate_limiter = rate_limiter or MultiRateLimiter()
         self.timeout_handler = timeout_handler or TimeoutHandler()
         self.validator = validator or ExecutionValidator()
-        
+
         # Executor
         self.executor = ToolExecutor(
             circuit_breaker=self.circuit_breaker,
@@ -64,26 +65,26 @@ class ExecutionDispatcher:
             timeout_handler=self.timeout_handler,
             validator=self.validator,
         )
-        
+
         # Concurrency control
         self.semaphore = asyncio.Semaphore(max_concurrent)
-    
+
     async def dispatch(
         self,
         request: ExecutionRequest,
     ) -> ExecutionResponse:
         """
         Dispatch execution request
-        
+
         Args:
             request: Execution request
-            
+
         Returns:
             Execution response
         """
         # Generate request ID if not provided
         request_id = request.request_id or str(uuid.uuid4())
-        
+
         # Create execution context
         context = ExecutionContext(
             request_id=request_id,
@@ -92,12 +93,12 @@ class ExecutionDispatcher:
             metadata=request.metadata,
             shared_context=request.context,
         )
-        
+
         logger.info(
             f"Starting execution {request_id}: "
             f"{len(request.tool_calls)} tool(s), mode={request.execution_mode.value}"
         )
-        
+
         try:
             # Validate tool calls
             validation_errors = self.registry.validate_tool_calls(
@@ -121,7 +122,7 @@ class ExecutionDispatcher:
                     end_time=datetime.utcnow(),
                     metadata=request.metadata,
                 )
-            
+
             # Execute based on mode
             if request.execution_mode == ExecutionMode.SEQUENTIAL:
                 results = await self._execute_sequential(
@@ -135,8 +136,10 @@ class ExecutionDispatcher:
                     context=context,
                 )
             else:
-                raise ValueError(f"Unsupported execution mode: {request.execution_mode}")
-            
+                raise ValueError(
+                    f"Unsupported execution mode: {request.execution_mode}"
+                )
+
             # Determine final status
             if all(r.success for r in results):
                 context.complete(ExecutionStatus.SUCCESS)
@@ -144,13 +147,13 @@ class ExecutionDispatcher:
                 context.complete(ExecutionStatus.PARTIAL)
             else:
                 context.complete(ExecutionStatus.FAILED)
-            
+
             logger.info(
                 f"Completed execution {request_id}: "
                 f"status={context.status.value}, "
                 f"duration={context.duration_ms:.2f}ms"
             )
-            
+
             # Aggregate results
             return ResultAggregator.aggregate(
                 request_id=request_id,
@@ -160,11 +163,11 @@ class ExecutionDispatcher:
                 end_time=context.end_time,
                 metadata=request.metadata,
             )
-            
+
         except Exception as e:
             logger.error(f"Execution {request_id} failed: {e}", exc_info=True)
             context.complete(ExecutionStatus.FAILED)
-            
+
             return ResultAggregator.aggregate(
                 request_id=request_id,
                 results=context.results,
@@ -179,7 +182,7 @@ class ExecutionDispatcher:
                 end_time=datetime.utcnow(),
                 metadata=request.metadata,
             )
-    
+
     async def dispatch_plan(
         self,
         plan: ExecutionPlan,
@@ -188,12 +191,12 @@ class ExecutionDispatcher:
     ) -> ExecutionResponse:
         """
         Dispatch execution plan from orchestration layer
-        
+
         Args:
             plan: Execution plan
             user_id: User ID
             session_id: Session ID
-            
+
         Returns:
             Execution response
         """
@@ -205,9 +208,9 @@ class ExecutionDispatcher:
             execution_mode=plan.execution_mode,
             metadata=plan.metadata,
         )
-        
+
         return await self.dispatch(request)
-    
+
     async def _execute_sequential(
         self,
         tool_calls: List[ToolCall],
@@ -216,7 +219,7 @@ class ExecutionDispatcher:
     ) -> List[ToolResult]:
         """Execute tools sequentially"""
         results = []
-        
+
         for i, tool_call in enumerate(tool_calls):
             tool = self.registry.get(tool_call.tool_name)
             if not tool:
@@ -230,36 +233,36 @@ class ExecutionDispatcher:
                 if stop_on_error:
                     break
                 continue
-            
+
             logger.debug(
-                f"Executing tool {i+1}/{len(tool_calls)}: {tool_call.tool_name}"
+                f"Executing tool {i + 1}/{len(tool_calls)}: {tool_call.tool_name}"
             )
-            
+
             result = await self.executor.execute(
                 tool=tool,
                 params=tool_call.params,
                 context=context,
             )
-            
+
             context.add_result(result)
             results.append(result)
-            
+
             # Stop on error if configured
             if stop_on_error and not result.success:
                 logger.warning(
                     f"Stopping execution after failed tool: {tool_call.tool_name}"
                 )
                 break
-        
+
         return results
-    
+
     async def _execute_parallel(
         self,
         tool_calls: List[ToolCall],
         context: ExecutionContext,
     ) -> List[ToolResult]:
         """Execute tools in parallel"""
-        
+
         async def execute_single(tool_call: ToolCall) -> ToolResult:
             """Execute single tool with semaphore"""
             async with self.semaphore:
@@ -279,23 +282,23 @@ class ExecutionDispatcher:
                         error=error.message,
                         execution_time_ms=0,
                     )
-                
+
                 return await self.executor.execute(
                     tool=tool,
                     params=tool_call.params,
                     context=context,
                 )
-        
+
         # Execute all tools concurrently
         tasks = [execute_single(call) for call in tool_calls]
         results = await asyncio.gather(*tasks, return_exceptions=False)
-        
+
         # Add all results to context
         for result in results:
             context.add_result(result)
-        
+
         return results
-    
+
     def get_status(self) -> Dict[str, Any]:
         """Get dispatcher status"""
         return {

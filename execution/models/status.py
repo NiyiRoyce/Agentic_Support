@@ -1,10 +1,12 @@
 # ExecutionStatus enum
 """Execution status enums and states"""
+
 from enum import Enum
 
 
 class ExecutionStatus(str, Enum):
     """Overall execution status"""
+
     PENDING = "pending"
     RUNNING = "running"
     SUCCESS = "success"
@@ -16,6 +18,7 @@ class ExecutionStatus(str, Enum):
 
 class ToolStatus(str, Enum):
     """Individual tool execution status"""
+
     PENDING = "pending"
     RUNNING = "running"
     SUCCESS = "success"
@@ -28,6 +31,7 @@ class ToolStatus(str, Enum):
 
 class ExecutionMode(str, Enum):
     """Execution strategy mode"""
+
     SEQUENTIAL = "sequential"
     PARALLEL = "parallel"
     CONDITIONAL = "conditional"

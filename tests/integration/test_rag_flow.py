@@ -32,25 +32,29 @@ async def embedder():
     else:
         # Use mock embedder for testing
         from knowledge.embeddings.mock_embedder import MockEmbedder
+
         return MockEmbedder()
 
 
 @pytest_asyncio.fixture
 async def ingestor(temp_vector_store, embedder):
     """Create document ingestor composed with vector store for testing."""
+
     class TestIngestor(DocumentIngestor):
         def __init__(self, vector_store, embedder, chunker=None):
             super().__init__(chunker)
             self.vector_store = vector_store
             self.embedder = embedder
 
-        async def ingest_directory(self, directory_path: str, file_pattern: str = "*.txt") -> int:
+        async def ingest_directory(
+            self, directory_path: str, file_pattern: str = "*.txt"
+        ) -> int:
             # Use the sync ingestion to produce documents, then add to vector store asynchronously
             docs = super().ingest_directory(directory_path, file_pattern)
             # Generate embeddings for documents using the embedder, if available
             try:
                 texts = [d.content for d in docs]
-                if hasattr(self.embedder, 'embed_texts'):
+                if hasattr(self.embedder, "embed_texts"):
                     embeddings = await self.embedder.embed_texts(texts)
                     for i, emb in enumerate(embeddings):
                         docs[i].embedding = emb
@@ -59,7 +63,7 @@ async def ingestor(temp_vector_store, embedder):
                 pass
 
             # If vector_store.add_documents is async, await it
-            add = getattr(self.vector_store, 'add_documents', None)
+            add = getattr(self.vector_store, "add_documents", None)
             if add:
                 if asyncio.iscoroutinefunction(add):
                     await add(docs)
@@ -87,7 +91,7 @@ async def test_full_rag_flow(ingestor, retriever):
     # Create test documents
     test_docs = {
         "doc1.md": "# Test Document 1\n\nThis is a test document about AI support agents.",
-        "doc2.md": "# Test Document 2\n\nAI agents help with customer support automation."
+        "doc2.md": "# Test Document 2\n\nAI agents help with customer support automation.",
     }
 
     with tempfile.TemporaryDirectory() as docs_dir:
@@ -130,16 +134,15 @@ async def test_retrieval_scoring(retriever, ingestor):
         "The capital of France is Paris.",
         "Berlin is the capital of Germany.",
         "Machine learning is a subset of artificial intelligence.",
-        "Python is a programming language used for data science."
+        "Python is a programming language used for data science.",
     ]
 
     documents = []
     for i, content in enumerate(test_content):
         from knowledge.vector_store.base import Document
+
         doc = Document(
-            id=f"test_doc_{i}",
-            content=content,
-            metadata={"source": f"test_{i}.txt"}
+            id=f"test_doc_{i}", content=content, metadata={"source": f"test_{i}.txt"}
         )
         documents.append(doc)
 

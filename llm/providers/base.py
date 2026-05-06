@@ -8,6 +8,7 @@ from enum import Enum
 
 class LLMProvider(str, Enum):
     """Supported LLM providers."""
+
     OPENAI = "openai"
     ANTHROPIC = "anthropic"
     LOCAL = "local"
@@ -16,6 +17,7 @@ class LLMProvider(str, Enum):
 @dataclass
 class LLMMessage:
     """Structured message for LLM conversations."""
+
     role: str  # "system", "user", "assistant"
     content: str
 
@@ -23,6 +25,7 @@ class LLMMessage:
 @dataclass
 class LLMResponse:
     """Standardized LLM response."""
+
     content: str
     model: str
     provider: str
@@ -36,6 +39,7 @@ class LLMResponse:
 @dataclass
 class LLMConfig:
     """Configuration for LLM calls."""
+
     model: str
     temperature: float = 0.7
     max_tokens: int = 1000
@@ -73,7 +77,9 @@ class BaseLLMProvider(ABC):
         """Count tokens in text for given model."""
         pass
 
-    def _create_default_config(self, overrides: Optional[LLMConfig] = None) -> LLMConfig:
+    def _create_default_config(
+        self, overrides: Optional[LLMConfig] = None
+    ) -> LLMConfig:
         """Create config with defaults and overrides."""
         if overrides:
             return overrides

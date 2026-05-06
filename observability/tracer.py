@@ -4,8 +4,10 @@ from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import BatchSpanProcessor
 from opentelemetry.exporter.otlp.proto.grpc.trace_exporter import OTLPSpanExporter
+
 try:
     from opentelemetry.instrumentation.fastapi import FastAPIInstrumentor
+
     FASTAPI_INSTRUMENTOR_AVAILABLE = True
 except ImportError:
     FASTAPI_INSTRUMENTOR_AVAILABLE = False
@@ -33,7 +35,9 @@ def configure_tracing(otlp_endpoint: Optional[str] = None) -> None:
         )
         span_processor = BatchSpanProcessor(otlp_exporter)
         trace.get_tracer_provider().add_span_processor(span_processor)
-        logger.info(f"OpenTelemetry tracing configured with OTLP endpoint: {otlp_endpoint}")
+        logger.info(
+            f"OpenTelemetry tracing configured with OTLP endpoint: {otlp_endpoint}"
+        )
     else:
         logger.info("OpenTelemetry tracing configured (no exporter set)")
 

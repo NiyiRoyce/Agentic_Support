@@ -19,7 +19,7 @@ def mock_llm_provider():
     provider.add_response(
         content='{"intent": "order_status", "confidence": 0.9, "reasoning": "User asked about order", "requires_clarification": false}',
         tokens=50,
-        cost=0.005
+        cost=0.005,
     )
     return provider
 
@@ -27,9 +27,7 @@ def mock_llm_provider():
 @pytest.fixture
 def llm_router(mock_llm_provider):
     """Create LLM router with mock provider."""
-    return LLMRouter(
-        providers={LLMProvider.OPENAI: mock_llm_provider}
-    )
+    return LLMRouter(providers={LLMProvider.OPENAI: mock_llm_provider})
 
 
 @pytest.fixture
@@ -45,7 +43,7 @@ def agent_context():
         session_id="test-session",
         user_id="test-user",
         conversation_history=[],
-        user_metadata={}
+        user_metadata={},
     )
 
 
@@ -64,7 +62,9 @@ async def test_intent_agent_execute_success(intent_agent, agent_context):
 
 
 @pytest.mark.asyncio
-async def test_intent_agent_execute_invalid_json(intent_agent, agent_context, mock_llm_provider):
+async def test_intent_agent_execute_invalid_json(
+    intent_agent, agent_context, mock_llm_provider
+):
     """Test handling of invalid JSON response."""
     # Override with invalid JSON
     mock_llm_provider.responses = [("invalid json", 10, 0.001)]

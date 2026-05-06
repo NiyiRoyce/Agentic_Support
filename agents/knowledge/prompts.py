@@ -6,7 +6,7 @@ from typing import List
 
 class KnowledgePrompts:
     """Prompt templates for knowledge retrieval agent."""
-    
+
     SYSTEM_PROMPT = """You are a helpful customer support assistant with access to a knowledge base.
 
 Your job is to answer customer questions accurately based on the provided knowledge base context.
@@ -21,7 +21,7 @@ Guidelines:
 7. If the question requires human expertise or is beyond the knowledge base, indicate this
 
 Never make up information. It's better to admit you don't know than to provide incorrect information."""
-    
+
     @staticmethod
     def build_rag_prompt(
         question: str,
@@ -30,11 +30,10 @@ Never make up information. It's better to admit you don't know than to provide i
     ) -> str:
         """Build prompt for RAG-based question answering."""
         # Format context
-        context = "\n\n---\n\n".join([
-            f"[Source {i+1}]\n{chunk}"
-            for i, chunk in enumerate(context_chunks)
-        ])
-        
+        context = "\n\n---\n\n".join(
+            [f"[Source {i + 1}]\n{chunk}" for i, chunk in enumerate(context_chunks)]
+        )
+
         return f"""Answer the customer's question based on the knowledge base context below.
 
 CUSTOMER QUESTION: "{question}"
@@ -52,7 +51,7 @@ Your response should be:
 - Helpful and conversational
 - Appropriately detailed
 - Professional and friendly"""
-    
+
     @staticmethod
     def build_confidence_evaluation_prompt(
         question: str,
@@ -61,7 +60,7 @@ Your response should be:
     ) -> str:
         """Build prompt to evaluate answer confidence."""
         sources_text = "\n".join([f"- {s}" for s in sources])
-        
+
         return f"""Evaluate the quality and confidence of this answer.
 
 QUESTION: "{question}"
@@ -89,7 +88,7 @@ Set requires_human=true if:
 - Answer quality is low (<0.5 confidence)
 - Complex policy or legal question
 - Sensitive customer situation"""
-    
+
     @staticmethod
     def build_greeting_response() -> str:
         """Build a friendly greeting response."""
@@ -101,7 +100,7 @@ Set requires_human=true if:
 - General policies and FAQs
 
 What can I help you with?"""
-    
+
     @staticmethod
     def build_fallback_response(question: str) -> str:
         """Build fallback response when no answer found."""

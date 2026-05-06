@@ -4,6 +4,7 @@ from pydantic_settings import BaseSettings
 from typing import Optional, List
 
 from dotenv import load_dotenv
+
 load_dotenv()
 
 
@@ -73,7 +74,9 @@ class Settings(BaseSettings):
             errors.append("DEBUG mode cannot be enabled in production (debug=True)")
 
         if not self.allowed_origins or "*" in self.allowed_origins:
-            errors.append("ALLOWED_ORIGINS must be explicitly configured in production (not '*', not empty)")
+            errors.append(
+                "ALLOWED_ORIGINS must be explicitly configured in production (not '*', not empty)"
+            )
 
         if not self.rate_limit_enabled:
             errors.append("RATE_LIMIT_ENABLED must be True in production")
@@ -82,11 +85,14 @@ class Settings(BaseSettings):
             errors.append("API_KEY must be set for production deployments")
 
         if self.is_production and not (self.openai_api_key or self.anthropic_api_key):
-            errors.append("At least one LLM provider API key must be configured in production")
+            errors.append(
+                "At least one LLM provider API key must be configured in production"
+            )
 
         if errors:
             raise ValueError(
-                "Production configuration validation failed:\n" + "\n".join(f"  - {e}" for e in errors)
+                "Production configuration validation failed:\n"
+                + "\n".join(f"  - {e}" for e in errors)
             )
 
     def validate_llm_config(self) -> None:
@@ -98,9 +104,14 @@ class Settings(BaseSettings):
             raise ValueError("At least one LLM provider API key must be configured")
 
         if self.default_llm_provider not in ["openai", "anthropic"]:
-            raise ValueError(f"Invalid default_llm_provider: {self.default_llm_provider}")
+            raise ValueError(
+                f"Invalid default_llm_provider: {self.default_llm_provider}"
+            )
 
-        if self.fallback_provider and self.fallback_provider not in ["openai", "anthropic"]:
+        if self.fallback_provider and self.fallback_provider not in [
+            "openai",
+            "anthropic",
+        ]:
             raise ValueError(f"Invalid fallback_provider: {self.fallback_provider}")
 
 
