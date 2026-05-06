@@ -1,7 +1,9 @@
 """Structured logging configuration using structlog."""
 
-import structlog
 from typing import Any
+
+import structlog
+from structlog.typing import Processor
 
 
 def configure_logging(level: str = "INFO") -> None:
@@ -21,7 +23,7 @@ def configure_logging(level: str = "INFO") -> None:
     )
 
     # Configure structlog processors for JSON output
-    shared_processors = [
+    shared_processors: list[Processor] = [
         structlog.stdlib.filter_by_level,
         structlog.stdlib.add_logger_name,
         structlog.stdlib.add_log_level,
@@ -55,7 +57,12 @@ def get_logger(name: str) -> Any:
     return structlog.get_logger(name)
 
 
-def log_with_context(logger: Any, level: str, message: str, **context: Any) -> None:
+def log_with_context(
+    logger: Any,
+    level: str,
+    message: str,
+    **context: Any,
+) -> None:
     """
     Log a message with additional context.
 
