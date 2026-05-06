@@ -22,7 +22,7 @@ class PromptMetadata:
     version: PromptVersion
     description: str
     created_at: str
-    performance_metrics: Dict[str, float] = None
+    performance_metrics: Optional[Dict[str, float]] = None
 
 
 class PromptRegistry:

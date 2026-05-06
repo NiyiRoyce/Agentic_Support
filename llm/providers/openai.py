@@ -62,7 +62,18 @@ class OpenAIProvider(BaseLLMProvider):
                 params["response_format"] = {"type": "json_object"}
 
             # Make API call
-            response = await self.client.chat.completions.create(**params)
+            response = await self.client.chat.completions.create(
+                model=cfg.model,
+                messages=openai_messages,
+                temperature=cfg.temperature,
+                max_tokens=cfg.max_tokens,
+                top_p=cfg.top_p,
+                frequency_penalty=cfg.frequency_penalty,
+                presence_penalty=cfg.presence_penalty,
+                timeout=cfg.timeout,
+                stop=cfg.stop_sequences if cfg.stop_sequences else None,
+                response_format={"type": "json_object"} if cfg.json_mode else None,
+            )
 
             # Extract usage
             usage = response.usage

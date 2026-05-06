@@ -11,10 +11,11 @@ load_dotenv()
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
+    # pydantic Settings model_config; narrow mypy complaint with explicit ignore
     model_config = ConfigDict(
         env_file=".env",
         case_sensitive=False,
-    )
+    )  # type: ignore[assignment]
 
     # App settings
     app_name: str = "AI Support Agent"

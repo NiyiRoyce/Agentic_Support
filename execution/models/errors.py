@@ -3,7 +3,7 @@
 
 from typing import Optional, Dict, Any
 from datetime import datetime
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ToolError(Exception):
@@ -71,5 +71,8 @@ class ExecutionError(BaseModel):
     details: Optional[Dict[str, Any]] = None
     recoverable: bool = False
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(
+        json_encoders={
+            datetime: lambda v: v.isoformat()
+        }
+    )

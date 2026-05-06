@@ -68,12 +68,7 @@ def track_llm_cost(
     increment_llm_cost(provider, model, cost)
 
     logger.info(
-        "LLM cost tracked",
-        provider=provider,
-        model=model,
-        input_tokens=input_tokens,
-        output_tokens=output_tokens,
-        cost=cost,
+        f"LLM cost tracked provider={provider} model={model} input_tokens={input_tokens} output_tokens={output_tokens} cost={cost}"
     )
 
 

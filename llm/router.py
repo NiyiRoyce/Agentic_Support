@@ -33,7 +33,7 @@ class RouteConfig:
 
     strategy: RoutingStrategy = RoutingStrategy.PRIMARY
     primary_provider: LLMProvider = LLMProvider.OPENAI
-    fallback_providers: List[LLMProvider] = None
+    fallback_providers: Optional[List[LLMProvider]] = None
     max_retries: int = 2
     timeout: int = 30
 
@@ -50,7 +50,7 @@ class LLMRouter:
     ):
         self.providers = providers
         self.config = route_config or RouteConfig()
-        self._circuit_breaker = {}  # Track provider health
+        self._circuit_breaker: Dict[LLMProvider, Dict[str, int]] = {}  # Track provider health
 
     async def complete(
         self,

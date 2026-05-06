@@ -1,5 +1,7 @@
 # orders agent (stub)
 
+from typing import Optional, Dict, Any
+
 from agents.base import BaseAgent, AgentContext, AgentResult, AgentType
 from agents.orders.prompts import OrderPrompts
 from llm import LLMRouter, LLMMessage, LLMConfig
@@ -23,7 +25,7 @@ class OrdersAgent(BaseAgent):
         self,
         user_message: str,
         context: AgentContext,
-        order_data: dict = None,
+        order_data: Optional[Dict[Any, Any]] = None,
         **kwargs,
     ) -> AgentResult:
         if not order_data:
@@ -51,7 +53,8 @@ class OrdersAgent(BaseAgent):
         )
 
     def build_prompt(
-        self, user_message: str, context: AgentContext, order_data: dict, **kwargs
+        self, user_message: str, context: AgentContext, **kwargs
     ) -> str:
+        order_data = kwargs.get("order_data", {})
         order_id = order_data.get("order_id", "Unknown")
         return self.prompts.build_order_status_prompt(order_id, order_data)

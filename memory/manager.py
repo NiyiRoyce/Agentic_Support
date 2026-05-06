@@ -1,7 +1,7 @@
 # memory manager
 """Memory manager for conversation state management."""
 
-from typing import Optional, List, Dict, Any
+from typing import Optional, List, Dict, Any, Union, TYPE_CHECKING
 from datetime import datetime
 import uuid
 
@@ -17,6 +17,9 @@ from memory.validators import (
     SessionHealthChecker,
 )
 from llm import LLMRouter
+
+if TYPE_CHECKING:
+    from agents.base import AgentContext
 
 
 class MemoryManager:
@@ -53,9 +56,13 @@ class MemoryManager:
         self.llm_router = llm_router
         self.enable_summarization = enable_summarization
         self.enable_validation = enable_validation
-
         # Initialize components
-        self.validator = MemoryValidator() if enable_validation else None
+        # Explicit attribute annotations help mypy understand optional state
+        self.validator: Optional[MemoryValidator] = (
+            MemoryValidator() if enable_validation else None
+        )
+        self.sanitizer: ContentSanitizer = ContentSanitizer()
+        self.health_checker: SessionHealthChecker = SessionHealthChecker()
         self.sanitizer = ContentSanitizer()
         self.health_checker = SessionHealthChecker()
 
@@ -150,7 +157,6 @@ class MemoryManager:
         # Sanitize content
         clean_content = self.sanitizer.sanitize_message(content)
         clean_metadata = self.sanitizer.sanitize_metadata(metadata or {})
-
         # Create message
         message = ConversationMessage(
             role=role,
@@ -159,8 +165,8 @@ class MemoryManager:
             metadata=clean_metadata,
         )
 
-        # Validate if enabled
-        if self.enable_validation:
+        # Validate if enabled and validator exists (narrow None)
+        if self.enable_validation and self.validator is not None:
             is_valid, error = self.validator.validate_message(message)
             if not is_valid:
                 raise ValueError(f"Message validation failed: {error}")
@@ -233,6 +239,8 @@ class MemoryManager:
         clean_metadata = self.sanitizer.sanitize_metadata(metadata)
 
         if merge:
+            if session.metadata is None:
+                session.metadata = {}
             session.metadata.update(clean_metadata)
         else:
             session.metadata = clean_metadata
@@ -405,7 +413,7 @@ class SessionContextBuilder:
         session_id: str,
         include_metadata: bool = True,
         max_history: int = 5,
-    ) -> Dict[str, Any]:
+    ) -> "AgentContext":
         """
         Build context dictionary for agents.
 
@@ -440,5 +448,5 @@ class SessionContextBuilder:
             user_id=session.user_id,
             session_id=session_id,
             conversation_history=history,
-            user_metadata=session.metadata if include_metadata else {},
+            user_metadata=(session.metadata or {}) if include_metadata else {},
         )

@@ -2,6 +2,7 @@
 
 from typing import List, Optional
 from anthropic import AsyncAnthropic, AnthropicError
+from anthropic.types import MessageParam, TextBlock
 
 from llm.providers.base import (
     BaseLLMProvider,
@@ -39,14 +40,16 @@ class AnthropicProvider(BaseLLMProvider):
         try:
             # Separate system message from conversation
             system_message = None
-            conversation_messages = []
+            conversation_messages: List[MessageParam] = []
 
             for msg in messages:
                 if msg.role == "system":
                     system_message = msg.content
                 else:
+                    # Cast role to the allowed types
+                    role = msg.role if msg.role in ["user", "assistant"] else "user"
                     conversation_messages.append(
-                        {"role": msg.role, "content": msg.content}
+                        MessageParam(role=role, content=msg.content)  # type: ignore
                     )
 
             # Build request params
@@ -66,7 +69,16 @@ class AnthropicProvider(BaseLLMProvider):
                 params["stop_sequences"] = cfg.stop_sequences
 
             # Make API call
-            response = await self.client.messages.create(**params)
+            response = await self.client.messages.create(
+                model=cfg.model,
+                messages=conversation_messages,
+                max_tokens=cfg.max_tokens,
+                temperature=cfg.temperature,
+                top_p=cfg.top_p,
+                timeout=cfg.timeout,
+                system=system_message if system_message else None,
+                stop_sequences=cfg.stop_sequences if cfg.stop_sequences else None,
+            )
 
             # Extract usage
             input_tokens = response.usage.input_tokens
@@ -83,7 +95,9 @@ class AnthropicProvider(BaseLLMProvider):
             # Extract content
             content = ""
             if response.content:
-                content = response.content[0].text
+                first_block = response.content[0]
+                if isinstance(first_block, TextBlock):
+                    content = first_block.text
 
             return LLMResponse(
                 content=content,

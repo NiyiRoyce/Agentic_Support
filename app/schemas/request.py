@@ -1,7 +1,7 @@
 """Request schemas."""
 
 from typing import Optional, Dict, Any
-from pydantic import BaseModel, ConfigDict, Field, validator, field_validator
+from pydantic import BaseModel, ConfigDict, Field, field_validator
 
 
 class ChatRequest(BaseModel):
@@ -76,7 +76,7 @@ class AddMessageRequest(BaseModel):
     )
     metadata: Optional[Dict[str, Any]] = Field(None, description="Message metadata")
 
-    @validator("role")
+    @field_validator("role")
     def validate_role(cls, v):
         """Validate role is valid."""
         valid_roles = ["user", "assistant", "system"]
@@ -84,14 +84,15 @@ class AddMessageRequest(BaseModel):
             raise ValueError(f"Role must be one of {valid_roles}")
         return v
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "role": "user",
                 "content": "I need help with my order",
                 "metadata": {"timestamp": "2024-01-01T10:00:00Z"},
             }
         }
+    )
 
 
 class WebhookRequest(BaseModel):
@@ -102,8 +103,8 @@ class WebhookRequest(BaseModel):
     timestamp: Optional[str] = Field(None, description="Event timestamp")
     source: Optional[str] = Field(None, description="Event source")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "event_type": "order.updated",
                 "data": {"order_id": "12345", "status": "shipped"},
@@ -111,6 +112,7 @@ class WebhookRequest(BaseModel):
                 "source": "shopify",
             }
         }
+    )
 
 
 class FeedbackRequest(BaseModel):
@@ -120,11 +122,12 @@ class FeedbackRequest(BaseModel):
     rating: int = Field(..., description="Rating (1-5)", ge=1, le=5)
     feedback: Optional[str] = Field(None, description="Optional feedback text")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "request_id": "req_abc123",
                 "rating": 5,
                 "feedback": "Very helpful response!",
             }
         }
+    )

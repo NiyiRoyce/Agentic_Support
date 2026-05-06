@@ -1,8 +1,8 @@
 """Base agent class for all AI agents."""
 
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, List
-from dataclasses import dataclass
+from typing import Any, Dict, Optional, List, cast
+from dataclasses import dataclass, field
 from enum import Enum
 
 from llm import LLMRouter, LLMMessage, LLMConfig, LLMResponse
@@ -25,15 +25,9 @@ class AgentContext:
 
     user_id: Optional[str] = None
     session_id: Optional[str] = None
-    conversation_history: List[Dict[str, Any]] = None
-    user_metadata: Dict[str, Any] = None
+    conversation_history: List[Dict[str, Any]] = field(default_factory=list)
+    user_metadata: Dict[str, Any] = field(default_factory=dict)
     request_id: Optional[str] = None
-
-    def __post_init__(self):
-        if self.conversation_history is None:
-            self.conversation_history = []
-        if self.user_metadata is None:
-            self.user_metadata = {}
 
 
 @dataclass
@@ -46,7 +40,7 @@ class AgentResult:
     agent_type: AgentType
     reasoning: Optional[str] = None
     error: Optional[str] = None
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
         if self.metadata is None:
@@ -208,18 +202,34 @@ class BaseAgent(ABC):
 
         # Validate JSON
         if schema:
-            is_valid, parsed, error = self.json_validator.validate_with_schema(
+            is_valid, parsed_model, error = self.json_validator.validate_with_schema(
                 response.content,
                 schema,
             )
+            # Normalize parsed to a dict for callers
+            parsed_result: Optional[Dict[Any, Any]] = None
+            if parsed_model is not None:
+                if hasattr(parsed_model, "model_dump"):
+                    parsed_result = parsed_model.model_dump()
+                elif isinstance(parsed_model, dict):
+                    parsed_result = cast(Dict[Any, Any], parsed_model)
+
             if is_valid:
-                return True, parsed.model_dump(), None
+                return True, parsed_result or {}, None
             return False, None, error
         else:
-            is_valid, parsed, error = self.json_validator.validate_json(
+            is_valid, parsed_dict, error = self.json_validator.validate_json(
                 response.content
             )
-            return is_valid, parsed, error
+            # Normalize parsed to a dict for callers
+            result: Optional[Dict[Any, Any]] = None
+            if parsed_dict is not None:
+                if hasattr(parsed_dict, "model_dump"):
+                    result = parsed_dict.model_dump()
+                elif isinstance(parsed_dict, dict):
+                    result = cast(Dict[Any, Any], parsed_dict)
+
+            return is_valid, result, error
 
     def _format_conversation_history(
         self,

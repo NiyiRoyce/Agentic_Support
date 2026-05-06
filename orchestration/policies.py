@@ -1,7 +1,7 @@
 # orchestration-level policies
 """Policies for orchestration decisions (escalation, fallback, etc.)."""
 
-from typing import Optional, Dict
+from typing import Optional, Dict, Any
 from dataclasses import dataclass
 
 
@@ -11,7 +11,7 @@ class PolicyDecision:
 
     action: str  # "proceed", "escalate", "fallback", "retry"
     reason: str
-    metadata: Dict = None
+    metadata: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
         if self.metadata is None:

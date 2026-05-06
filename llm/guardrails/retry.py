@@ -3,7 +3,7 @@
 
 import asyncio
 import time
-from typing import Callable, Optional, Any, TypeVar, List
+from typing import Callable, Optional, Any, TypeVar, List, Dict
 from dataclasses import dataclass
 from enum import Enum
 import random
@@ -23,7 +23,7 @@ class RetryStrategy(str, Enum):
 class RetryError(Exception):
     """Raised when all retry attempts are exhausted."""
 
-    def __init__(self, message: str, attempts: int, last_error: Exception):
+    def __init__(self, message: str, attempts: int, last_error: Optional[Exception]):
         self.message = message
         self.attempts = attempts
         self.last_error = last_error
@@ -55,7 +55,7 @@ class RetryHandler:
 
     def __init__(self, config: Optional[RetryConfig] = None):
         self.config = config or RetryConfig()
-        self._attempt_history = []
+        self._attempt_history: List[Dict[str, Any]] = []
 
     async def execute(
         self,
@@ -186,8 +186,8 @@ class AdaptiveRetry:
 
     def __init__(self, base_config: Optional[RetryConfig] = None):
         self.base_config = base_config or RetryConfig()
-        self._error_counts = {}
-        self._success_counts = {}
+        self._error_counts: Dict[str, int] = {}
+        self._success_counts: Dict[str, int] = {}
         self._total_attempts = 0
 
     async def execute(
@@ -270,7 +270,7 @@ class RateLimitRetry:
     ):
         self.max_attempts = max_attempts
         self.base_delay = base_delay
-        self._rate_limit_window = {}
+        self._rate_limit_window: Dict[str, float] = {}
 
     async def execute(
         self,

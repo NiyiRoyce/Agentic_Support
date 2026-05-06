@@ -2,7 +2,7 @@
 """Execution request and response models"""
 
 from typing import List, Dict, Any, Optional
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 from datetime import datetime
 
 from .tool import ToolCall, ToolResult
@@ -36,8 +36,11 @@ class ExecutionResponse(BaseModel):
     duration_ms: Optional[float] = None
     metadata: Dict[str, Any] = Field(default_factory=dict)
 
-    class Config:
-        json_encoders = {datetime: lambda v: v.isoformat()}
+    model_config = ConfigDict(
+        json_encoders={
+            datetime: lambda v: v.isoformat()
+        }
+    )
 
     @property
     def success(self) -> bool:

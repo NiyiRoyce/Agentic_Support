@@ -1,8 +1,7 @@
 """Pagination schemas."""
 
 from typing import Generic, TypeVar, List
-from pydantic import BaseModel, Field
-from pydantic.generics import GenericModel
+from pydantic import BaseModel, ConfigDict, Field
 
 T = TypeVar("T")
 
@@ -14,7 +13,7 @@ class PaginationParams(BaseModel):
     page_size: int = Field(20, ge=1, le=100, description="Items per page")
 
 
-class PaginatedResponse(GenericModel, Generic[T]):
+class PaginatedResponse(BaseModel, Generic[T]):
     """Generic paginated response."""
 
     items: List[T]
@@ -23,8 +22,8 @@ class PaginatedResponse(GenericModel, Generic[T]):
     page_size: int
     total_pages: int
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "items": [],
                 "total": 100,
@@ -33,3 +32,4 @@ class PaginatedResponse(GenericModel, Generic[T]):
                 "total_pages": 5,
             }
         }
+    )

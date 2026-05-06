@@ -15,7 +15,7 @@ class ConversationMessage:
     role: str  # "user", "assistant", "system"
     content: str
     timestamp: datetime
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
 
     def __post_init__(self):
         if self.metadata is None:
@@ -43,7 +43,7 @@ class ConversationSession:
     messages: List[ConversationMessage]
     created_at: datetime
     updated_at: datetime
-    metadata: Dict[str, Any] = None
+    metadata: Optional[Dict[str, Any]] = None
     summary: Optional[str] = None
 
     def __post_init__(self):

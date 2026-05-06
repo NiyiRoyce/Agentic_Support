@@ -1,7 +1,7 @@
 """Response schemas."""
 
 from typing import Optional, Dict, Any, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ChatResponse(BaseModel):
@@ -29,8 +29,8 @@ class ChatResponse(BaseModel):
         None, description="Additional response metadata"
     )
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": True,
                 "message": "Your order #12345 is currently being shipped and should arrive by Friday.",
@@ -40,6 +40,7 @@ class ChatResponse(BaseModel):
                 "metadata": {"execution_time_ms": 1250, "tokens_used": 450},
             }
         }
+    )
 
 
 class SessionResponse(BaseModel):
@@ -55,8 +56,8 @@ class SessionResponse(BaseModel):
     )
     metadata: Optional[Dict[str, Any]] = Field(None, description="Session metadata")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": True,
                 "session_id": "session_abc123",
@@ -67,6 +68,7 @@ class SessionResponse(BaseModel):
                 "metadata": {"source": "web", "language": "en"},
             }
         }
+    )
 
 
 class MessageResponse(BaseModel):
@@ -78,8 +80,8 @@ class MessageResponse(BaseModel):
     content: Optional[str] = Field(None, description="Message content")
     timestamp: Optional[str] = Field(None, description="Message timestamp")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": True,
                 "message_id": "msg_xyz789",
@@ -88,6 +90,7 @@ class MessageResponse(BaseModel):
                 "timestamp": "2024-01-01T10:00:00Z",
             }
         }
+    )
 
 
 class ConversationHistoryResponse(BaseModel):
@@ -99,8 +102,8 @@ class ConversationHistoryResponse(BaseModel):
     total_count: int = Field(..., description="Total message count")
     has_summary: bool = Field(False, description="Whether session has been summarized")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": True,
                 "session_id": "session_abc123",
@@ -120,6 +123,7 @@ class ConversationHistoryResponse(BaseModel):
                 "has_summary": False,
             }
         }
+    )
 
 
 class HealthResponse(BaseModel):
@@ -133,8 +137,8 @@ class HealthResponse(BaseModel):
         None, description="Service health status"
     )
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "status": "healthy",
                 "timestamp": "2024-01-01T10:00:00Z",
@@ -147,6 +151,7 @@ class HealthResponse(BaseModel):
                 },
             }
         }
+    )
 
 
 class WebhookResponse(BaseModel):
@@ -156,14 +161,15 @@ class WebhookResponse(BaseModel):
     event_type: str = Field(..., description="Type of event processed")
     message: Optional[str] = Field(None, description="Processing message")
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "success": True,
                 "event_type": "order.updated",
                 "message": "Webhook processed successfully",
             }
         }
+    )
 
 
 class MetricsResponse(BaseModel):

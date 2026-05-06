@@ -1,5 +1,7 @@
 # escalation agent (stub)
 
+from typing import cast, Dict, Any
+
 from agents.base import BaseAgent, AgentContext, AgentResult, AgentType
 from agents.escalation.schemas import EscalationAgentOutput
 from agents.escalation.prompts import EscalationPrompts
@@ -37,8 +39,8 @@ class EscalationAgent(BaseAgent):
             return self._create_error_result(f"Parse error: {error}")
 
         return self._create_success_result(
-            data=parsed,
-            confidence=parsed.get("should_escalate", False) and 0.95 or 0.85,
+            data=cast(Dict[str, Any], parsed),
+            confidence=cast(Dict[str, Any], parsed).get("should_escalate", False) and 0.95 or 0.85,
             reasoning="Escalation decision made",
         )
 

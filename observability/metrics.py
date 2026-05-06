@@ -24,7 +24,7 @@ LLM_REQUEST_COUNT = Counter(
 LLM_TOKEN_COUNT = Counter(
     "llm_tokens_total",
     "Total number of tokens used",
-    ["provider", "model", "type"],  # type: input, output
+    ["provider", "model", "type"],  # token types: input, output
 )
 
 LLM_COST = Counter("llm_cost_total", "Total LLM cost in USD", ["provider", "model"])

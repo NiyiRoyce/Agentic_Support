@@ -66,6 +66,8 @@ class JSONValidator:
             return False, None, error
 
         try:
+            # parsed_json is guaranteed to be a dict here (validated above)
+            assert parsed_json is not None
             model = schema(**parsed_json)
             return True, model, None
         except ValidationError as e:

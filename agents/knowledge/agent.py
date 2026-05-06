@@ -1,7 +1,7 @@
 # knowledge agent implementation (stub)
 """Knowledge retrieval agent using RAG."""
 
-from typing import Optional, List
+from typing import Optional, List, cast, Dict, Any
 
 from agents.base import BaseAgent, AgentContext, AgentResult, AgentType
 from agents.knowledge.prompts import KnowledgePrompts
@@ -128,10 +128,10 @@ class KnowledgeAgent(BaseAgent):
         self,
         user_message: str,
         context: AgentContext,
-        retrieved_chunks: List[str],
         **kwargs,
     ) -> str:
         """Build prompt for knowledge-based question answering."""
+        retrieved_chunks = kwargs.get("retrieved_chunks", [])
         # Format conversation history
         history = self._format_conversation_history(context, max_messages=3)
 
@@ -183,8 +183,8 @@ class KnowledgeAgent(BaseAgent):
 
         if response.success:
             is_valid, parsed, error = self._parse_llm_json(response)
-            if is_valid and "confidence" in parsed:
-                return parsed["confidence"]
+            if is_valid and "confidence" in cast(Dict[str, Any], parsed):
+                return cast(Dict[str, Any], parsed)["confidence"]
 
         # Fallback: estimate based on answer characteristics
         return self._estimate_confidence_heuristic(answer, sources)

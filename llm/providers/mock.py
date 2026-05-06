@@ -10,7 +10,7 @@ class MockLLMProvider(BaseLLMProvider):
     def __init__(self, api_key: str = "mock_key", default_model: str = "mock-model"):
         super().__init__(api_key, default_model)
         self.call_count = 0
-        self.responses = []  # List of responses to return in order
+        self.responses: List[tuple[str, int, float]] = []  # List of responses to return in order
 
     def add_response(self, content: str, tokens: int = 100, cost: float = 0.01) -> None:
         """Add a response to the queue."""
@@ -50,4 +50,4 @@ class MockLLMProvider(BaseLLMProvider):
 
     def count_tokens(self, text: str, model: str) -> int:
         """Mock token counting - rough estimate."""
-        return len(text.split()) * 1.3  # Rough approximation
+        return int(len(text.split()) * 1.3)  # Rough approximation as int

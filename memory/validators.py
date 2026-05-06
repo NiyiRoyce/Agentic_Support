@@ -1,7 +1,7 @@
 # validators for memory inputs
 """Validators for memory operations."""
 
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Any, Dict
 from datetime import datetime
 
 from memory.store import ConversationMessage, ConversationSession
@@ -221,7 +221,7 @@ class ContentSanitizer:
         return sanitized.strip()
 
     @staticmethod
-    def sanitize_metadata(metadata: dict) -> dict:
+    def sanitize_metadata(metadata: Dict[Any, Any]) -> Dict[str, Any]:
         """
         Sanitize metadata dictionary.
 
@@ -231,7 +231,7 @@ class ContentSanitizer:
         Returns:
             Sanitized metadata
         """
-        sanitized = {}
+        sanitized: Dict[str, Any] = {}
 
         for key, value in metadata.items():
             # Sanitize key
@@ -240,6 +240,7 @@ class ContentSanitizer:
                 continue
 
             # Sanitize value
+            clean_value: Any
             if isinstance(value, str):
                 clean_value = ContentSanitizer.sanitize_message(value)
             elif isinstance(value, (int, float, bool)):
@@ -273,57 +274,61 @@ class SessionHealthChecker:
         Returns:
             Health report dictionary
         """
-        report = {
+        issues: List[str] = []
+        warnings: List[str] = []
+        metrics: Dict[str, Any] = {}
+
+        report: Dict[str, Any] = {
             "is_healthy": True,
-            "issues": [],
-            "warnings": [],
-            "metrics": {},
+            "issues": issues,
+            "warnings": warnings,
+            "metrics": metrics,
         }
 
         # Check message count
         msg_count = len(session.messages)
-        report["metrics"]["message_count"] = msg_count
+        metrics["message_count"] = msg_count
 
         if msg_count == 0:
             report["is_healthy"] = False
-            report["issues"].append("Session has no messages")
+            issues.append("Session has no messages")
         elif msg_count > 100:
-            report["warnings"].append("Session has many messages (>100)")
+            warnings.append("Session has many messages (>100)")
 
         # Check session age
         age = datetime.now() - session.created_at
-        report["metrics"]["age_hours"] = age.total_seconds() / 3600
+        metrics["age_hours"] = age.total_seconds() / 3600
 
         if age.days > 7:
-            report["warnings"].append("Session older than 7 days")
+            warnings.append("Session older than 7 days")
 
         # Check activity
         last_update = datetime.now() - session.updated_at
-        report["metrics"]["hours_since_update"] = last_update.total_seconds() / 3600
+        metrics["hours_since_update"] = last_update.total_seconds() / 3600
 
         if last_update.days > 1:
-            report["warnings"].append("No activity in over 24 hours")
+            warnings.append("No activity in over 24 hours")
 
         # Check message balance (user vs assistant)
         user_messages = sum(1 for m in session.messages if m.role == "user")
         assistant_messages = sum(1 for m in session.messages if m.role == "assistant")
 
-        report["metrics"]["user_messages"] = user_messages
-        report["metrics"]["assistant_messages"] = assistant_messages
+        metrics["user_messages"] = user_messages
+        metrics["assistant_messages"] = assistant_messages
 
         if user_messages > 0:
             ratio = assistant_messages / user_messages
             if ratio < 0.5:
-                report["warnings"].append("Low assistant response rate")
+                warnings.append("Low assistant response rate")
             elif ratio > 2.0:
-                report["warnings"].append("High assistant response rate")
+                warnings.append("High assistant response rate")
 
         # Check for errors in metadata
-        if "error_count" in session.metadata:
+        if session.metadata and "error_count" in session.metadata:
             error_count = session.metadata["error_count"]
             report["metrics"]["error_count"] = error_count
 
-            if error_count > 5:
+            if isinstance(error_count, int) and error_count > 5:
                 report["is_healthy"] = False
                 report["issues"].append("High error count in session")
 

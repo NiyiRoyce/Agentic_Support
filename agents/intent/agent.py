@@ -1,7 +1,7 @@
 # intent agent implementation (stub)
 """Intent classification agent."""
 
-from typing import Optional
+from typing import Optional, cast, Dict, Any
 
 from agents.base import BaseAgent, AgentContext, AgentResult, AgentType
 from agents.intent.schemas import IntentClassification, IntentType
@@ -80,7 +80,7 @@ class IntentAgent(BaseAgent):
             )
 
         # Extract classification
-        classification = parsed
+        classification = cast(Dict[str, Any], parsed)
 
         # Determine suggested agent based on intent
         suggested_agent = self._map_intent_to_agent(classification["intent"])
@@ -134,7 +134,7 @@ class IntentAgent(BaseAgent):
             IntentType.ESCALATION: "escalation",
             IntentType.UNKNOWN: None,
         }
-        return intent_to_agent.get(intent)
+        return intent_to_agent.get(intent, None)  # type: ignore
 
     async def generate_clarification(
         self,

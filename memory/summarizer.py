@@ -1,7 +1,7 @@
 # summarizer
 """Conversation summarization for memory compression."""
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 from datetime import datetime
 
 from memory.store import ConversationMessage, ConversationSession
@@ -189,7 +189,7 @@ Format:
     def _build_summary_prompt(
         self,
         conversation: str,
-        metadata: dict,
+        metadata: Optional[Dict[str, Any]],
     ) -> str:
         """Build prompt for conversation summarization."""
         return f"""Summarize this customer support conversation:

@@ -31,7 +31,7 @@ class OrchestrationContext:
     timestamp: datetime = field(default_factory=datetime.now)
 
     # Agent context (for agents)
-    agent_context: Optional[AgentContext] = None
+    agent_context: AgentContext = field(default_factory=AgentContext)
 
     # Conversation metadata
     conversation_history: List[Dict[str, Any]] = field(default_factory=list)

@@ -1,7 +1,7 @@
 """Error schemas."""
 
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
 
 
 class ErrorDetail(BaseModel):
@@ -24,8 +24,8 @@ class ErrorResponse(BaseModel):
         None, description="Request identifier for tracking"
     )
 
-    class Config:
-        schema_extra = {
+    model_config = ConfigDict(
+        json_schema_extra={
             "example": {
                 "error": "ValidationError",
                 "message": "Invalid request data",
@@ -39,6 +39,7 @@ class ErrorResponse(BaseModel):
                 "request_id": "req_abc123",
             }
         }
+    )
 
 
 class ValidationError(ErrorResponse):
