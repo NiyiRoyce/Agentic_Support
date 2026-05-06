@@ -58,3 +58,8 @@ class VectorStore(ABC):
     async def clear(self) -> bool:
         """Clear all documents."""
         pass
+
+    @abstractmethod
+    async def get_all_documents(self) -> List[Document]:
+        """Retrieve all documents from the store."""
+        pass

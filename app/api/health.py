@@ -5,7 +5,7 @@ from fastapi.responses import PlainTextResponse
 from datetime import datetime
 import asyncio
 import logging
-from typing import Dict
+from typing import Dict, Any
 
 from app.schemas.response import HealthResponse
 from app.dependencies import (
@@ -49,6 +49,8 @@ async def health_check() -> HealthResponse:
         timestamp=datetime.utcnow().isoformat(),
         version=settings.app_version,
         environment=settings.app_env,
+        services=None,
+        errors=None,
     )
 
 
@@ -82,7 +84,7 @@ async def detailed_health_check(
     Performs dependency-aware health checks with isolation and timeouts.
     """
 
-    services: Dict[str, str] = {}
+    services: Dict[str, Any] = {}
     errors: Dict[str, str] = {}
 
     # ---- LLM Router Check ----

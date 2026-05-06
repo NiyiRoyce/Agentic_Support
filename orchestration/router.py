@@ -143,16 +143,17 @@ class OrchestrationRouter:
 
         # Update context
         if result.success:
-            context.current_intent = result.data["intent"]
+            context.current_intent = result.data.get("intent") if result.data else None
             context.set_confidence("intent", result.confidence)
             context.add_agent_execution(
                 "intent_agent",
                 latency,
-                tokens=result.metadata.get("tokens_used", 0),
-                cost=result.metadata.get("cost", 0.0),
+                tokens=result.metadata.get("tokens_used", 0) if result.metadata else 0,
+                cost=result.metadata.get("cost", 0.0) if result.metadata else 0.0,
             )
         else:
-            context.add_error(result.error, "intent_agent")
+            error_msg = result.error or "Unknown error"
+            context.add_error(error_msg, "intent_agent")
 
         return result.data if result.success else {}
 

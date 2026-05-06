@@ -1,8 +1,8 @@
-# ChromaDB vector store implementation
 """ChromaDB vector store implementation."""
 
 import asyncio
-from typing import List, Dict, Any, Optional
+from typing import List, Dict, Any, Optional, cast, Sequence, Mapping
+
 import chromadb
 from chromadb.config import Settings
 
@@ -17,40 +17,53 @@ class ChromaVectorStore(VectorStore):
         collection_name: str = "knowledge_base",
         persist_directory: str = "./vector_store",
     ):
-        """Initialize ChromaDB client."""
         self.collection_name = collection_name
         self.persist_directory = persist_directory
 
-        # Initialize ChromaDB client
         self.client = chromadb.PersistentClient(
-            path=persist_directory, settings=Settings(anonymized_telemetry=False)
+            path=persist_directory,
+            settings=Settings(anonymized_telemetry=False),
         )
 
-        # Get or create collection
         self.collection = self.client.get_or_create_collection(
             name=collection_name,
             metadata={"description": "AI Support Agent Knowledge Base"},
         )
 
     async def add_documents(self, documents: List[Document]) -> bool:
-        """Add documents to the vector store."""
+        """Add documents to the vector store with embeddings."""
         try:
-            ids = [doc.id for doc in documents]
-            embeddings = [doc.embedding for doc in documents if doc.embedding]
-            metadatas = [doc.metadata for doc in documents]
-            documents_text = [doc.content for doc in documents]
+            if not documents:
+                return True
 
-            # Run in thread pool since ChromaDB is synchronous
-            await asyncio.get_event_loop().run_in_executor(
+            # Filter to only documents with embeddings
+            docs_with_embeddings = [
+                doc for doc in documents if doc.embedding is not None
+            ]
+
+            if not docs_with_embeddings:
+                return True
+
+            ids = [doc.id for doc in docs_with_embeddings]
+            embeddings: List[Sequence[float]] = [
+                cast(Sequence[float], doc.embedding) for doc in docs_with_embeddings
+            ]
+            metadatas: List[Dict[str, Any]] = [
+                doc.metadata or {} for doc in docs_with_embeddings
+            ]
+            documents_text = [doc.content for doc in docs_with_embeddings]
+
+            await asyncio.get_running_loop().run_in_executor(
                 None,
                 lambda: self.collection.add(
                     ids=ids,
-                    embeddings=embeddings,
-                    metadatas=metadatas,
+                    embeddings=embeddings,  # type: ignore[arg-type]
+                    metadatas=metadatas,  # type: ignore[arg-type]
                     documents=documents_text,
                 ),
             )
             return True
+
         except Exception as e:
             print(f"Error adding documents: {e}")
             return False
@@ -61,46 +74,73 @@ class ChromaVectorStore(VectorStore):
         limit: int = 10,
         metadata_filter: Optional[Dict[str, Any]] = None,
     ) -> List[SearchResult]:
-        """Search for similar documents."""
+        """Search for similar documents using vector similarity."""
         try:
-            # Run in thread pool
-            results = await asyncio.get_event_loop().run_in_executor(
+            results = await asyncio.get_running_loop().run_in_executor(
                 None,
                 lambda: self.collection.query(
-                    query_embeddings=[query_embedding],
+                    query_embeddings=[cast(Sequence[float], query_embedding)],  # type: ignore[arg-type]
                     n_results=limit,
                     where=metadata_filter,
                     include=["documents", "metadatas", "distances"],
                 ),
             )
 
-            search_results = []
-            if results["ids"] and results["ids"][0]:
-                for i, doc_id in enumerate(results["ids"][0]):
-                    # Reconstruct document
-                    doc = Document(
-                        id=doc_id,
-                        content=results["documents"][0][i],
-                        metadata=results["metadatas"][0][i],
-                        embedding=None,  # Not returned by query
-                    )
+            search_results: List[SearchResult] = []
 
-                    # ChromaDB returns cosine distance, convert to similarity score
-                    distance = results["distances"][0][i]
-                    score = 1.0 - distance  # Convert distance to similarity
+            ids_list = results.get("ids")
+            documents_list = results.get("documents")
+            metadatas_list = results.get("metadatas")
+            distances_list = results.get("distances")
 
-                    search_results.append(SearchResult(document=doc, score=score))
+            # Guard against empty results
+            if not ids_list or not ids_list[0]:
+                return []
+
+            ids = ids_list[0] if ids_list else []
+            documents = documents_list[0] if documents_list else []
+            metadatas = metadatas_list[0] if metadatas_list else []
+            distances = distances_list[0] if distances_list else []
+
+            for i, doc_id in enumerate(ids):
+                if i >= len(documents) or i >= len(metadatas) or i >= len(distances):
+                    continue
+
+                doc_content = documents[i] or ""
+                
+                # Convert metadata Mapping to dict for compatibility
+                metadata: Dict[str, Any] = {}
+                if metadatas[i] is not None:
+                    meta_item = metadatas[i]
+                    if isinstance(meta_item, dict):
+                        metadata = meta_item
+                    else:
+                        # Cast Mapping to dict
+                        metadata = dict(cast(Mapping[str, Any], meta_item))
+
+                doc = Document(
+                    id=doc_id,
+                    content=doc_content,
+                    metadata=metadata,
+                    embedding=None,
+                )
+
+                distance = distances[i]
+                score = 1.0 - float(distance)
+
+                search_results.append(SearchResult(document=doc, score=score))
 
             return search_results
+
         except Exception as e:
             print(f"Error searching: {e}")
             return []
 
     async def delete(self, document_ids: List[str]) -> bool:
-        """Delete documents by IDs."""
         try:
-            await asyncio.get_event_loop().run_in_executor(
-                None, lambda: self.collection.delete(ids=document_ids)
+            await asyncio.get_running_loop().run_in_executor(
+                None,
+                lambda: self.collection.delete(ids=document_ids),
             )
             return True
         except Exception as e:
@@ -108,68 +148,109 @@ class ChromaVectorStore(VectorStore):
             return False
 
     async def count(self) -> int:
-        """Get total number of documents."""
         try:
-            return self.collection.count()
+            return int(self.collection.count())
         except Exception:
             return 0
 
     async def clear(self) -> bool:
-        """Clear all documents."""
         try:
-            await asyncio.get_event_loop().run_in_executor(None, self.collection.delete)
+            await asyncio.get_running_loop().run_in_executor(
+                None,
+                lambda: self.collection.delete()
+            )
             return True
         except Exception as e:
             print(f"Error clearing collection: {e}")
             return False
 
     async def get_all_documents(self) -> List[Document]:
-        """Get all documents in the store."""
+        """Retrieve all documents from the store."""
         try:
-            results = await asyncio.get_event_loop().run_in_executor(
+            results = await asyncio.get_running_loop().run_in_executor(
                 None,
                 lambda: self.collection.get(
                     include=["documents", "metadatas", "embeddings"]
                 ),
             )
 
-            documents = []
-            ids = results.get("ids") if isinstance(results, dict) else None
-            if ids is not None and hasattr(ids, "__len__") and len(ids) > 0:
-                # Normalize possible numpy arrays to lists
-                try:
-                    ids_iter = list(ids)
-                except Exception:
-                    ids_iter = ids
+            documents: List[Document] = []
 
-                for i, doc_id in enumerate(ids_iter):
-                    doc = Document(
+            ids = results.get("ids")
+            docs = results.get("documents")
+            metas = results.get("metadatas")
+            embeds = results.get("embeddings")
+
+            # Guard against empty or missing ids
+            if not ids:
+                return []
+
+            for i, doc_id in enumerate(ids):
+                # Ensure all indices are in bounds
+                if docs is None or i >= len(docs):
+                    continue
+                if metas is None or i >= len(metas):
+                    continue
+
+                doc_content = docs[i] or ""
+                
+                # Convert metadata Mapping to dict for compatibility
+                metadata: Dict[str, Any] = {}
+                if metas[i] is not None:
+                    meta_item = metas[i]
+                    if isinstance(meta_item, dict):
+                        metadata = meta_item
+                    else:
+                        # Cast Mapping to dict
+                        metadata = dict(cast(Mapping[str, Any], meta_item))
+
+                embedding: Optional[List[float]] = None
+                if embeds and i < len(embeds) and embeds[i] is not None:
+                    embedding = cast(List[float], embeds[i])
+
+                documents.append(
+                    Document(
                         id=doc_id,
-                        content=results["documents"][i],
-                        metadata=results["metadatas"][i],
-                        embedding=(
-                            results.get("embeddings")[i]
-                            if results.get("embeddings")
-                            else None
-                        ),
+                        content=doc_content,
+                        metadata=metadata,
+                        embedding=embedding,
                     )
-                    documents.append(doc)
+                )
 
             return documents
+
         except Exception as e:
             print(f"Error getting all documents: {e}")
             return []
 
     async def update_embeddings(self, documents: List[Document]) -> bool:
-        """Update embeddings for existing documents."""
+        """Update document embeddings."""
         try:
-            ids = [doc.id for doc in documents]
-            embeddings = [doc.embedding for doc in documents if doc.embedding]
+            if not documents:
+                return True
 
-            await asyncio.get_event_loop().run_in_executor(
-                None, lambda: self.collection.update(ids=ids, embeddings=embeddings)
+            # Filter to only documents with embeddings
+            docs_with_embeddings = [
+                doc for doc in documents if doc.embedding is not None
+            ]
+
+            if not docs_with_embeddings:
+                return True
+
+            ids = [doc.id for doc in docs_with_embeddings]
+            embeddings: List[Sequence[float]] = [
+                cast(Sequence[float], doc.embedding) for doc in docs_with_embeddings
+            ]
+
+            await asyncio.get_running_loop().run_in_executor(
+                None,
+                lambda: self.collection.update(
+                    ids=ids,
+                    embeddings=embeddings,  # type: ignore[arg-type]
+                ),
             )
             return True
+
         except Exception as e:
             print(f"Error updating embeddings: {e}")
             return False

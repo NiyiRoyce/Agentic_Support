@@ -1,6 +1,7 @@
 """Anthropic (Claude) LLM provider implementation."""
 
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
+
 from anthropic import AsyncAnthropic, AnthropicError
 from anthropic.types import MessageParam, TextBlock
 
@@ -38,66 +39,64 @@ class AnthropicProvider(BaseLLMProvider):
         cfg = self._create_default_config(config)
 
         try:
-            # Separate system message from conversation
-            system_message = None
+            system_message: Optional[str] = None
             conversation_messages: List[MessageParam] = []
 
             for msg in messages:
                 if msg.role == "system":
                     system_message = msg.content
                 else:
-                    # Cast role to the allowed types
-                    role = msg.role if msg.role in ["user", "assistant"] else "user"
+                    role_val: str = "assistant" if msg.role == "assistant" else "user"
+                    # Type ignore needed because MessageParam role is Literal["user", "assistant"]
                     conversation_messages.append(
-                        MessageParam(role=role, content=msg.content)  # type: ignore
+                        MessageParam(
+                            role=role_val,  # type: ignore[typeddict-item]
+                            content=msg.content,
+                        )
                     )
 
-            # Build request params
-            params = {
+            # Build request args safely (no None fields)
+            kwargs: Dict[str, Any] = {
                 "model": cfg.model,
                 "messages": conversation_messages,
                 "max_tokens": cfg.max_tokens,
-                "temperature": cfg.temperature,
-                "top_p": cfg.top_p,
-                "timeout": cfg.timeout,
             }
 
+            if cfg.temperature is not None:
+                kwargs["temperature"] = cfg.temperature
+
+            if cfg.top_p is not None:
+                kwargs["top_p"] = cfg.top_p
+
+            if cfg.timeout is not None:
+                kwargs["timeout"] = cfg.timeout
+
             if system_message:
-                params["system"] = system_message
+                kwargs["system"] = system_message
 
             if cfg.stop_sequences:
-                params["stop_sequences"] = cfg.stop_sequences
+                kwargs["stop_sequences"] = cfg.stop_sequences
 
-            # Make API call
-            response = await self.client.messages.create(
-                model=cfg.model,
-                messages=conversation_messages,
-                max_tokens=cfg.max_tokens,
-                temperature=cfg.temperature,
-                top_p=cfg.top_p,
-                timeout=cfg.timeout,
-                system=system_message if system_message else None,
-                stop_sequences=cfg.stop_sequences if cfg.stop_sequences else None,
-            )
+            response = await self.client.messages.create(**kwargs)
 
-            # Extract usage
+            # Usage
             input_tokens = response.usage.input_tokens
             output_tokens = response.usage.output_tokens
             tokens_used = input_tokens + output_tokens
 
-            # Calculate cost
+            # Cost
             cost = self._calculate_cost(
                 input_tokens=input_tokens,
                 output_tokens=output_tokens,
                 model=cfg.model,
             )
 
-            # Extract content
+            # Extract text safely
             content = ""
             if response.content:
-                first_block = response.content[0]
-                if isinstance(first_block, TextBlock):
-                    content = first_block.text
+                block = response.content[0]
+                if isinstance(block, TextBlock):
+                    content = block.text
 
             return LLMResponse(
                 content=content,
@@ -141,10 +140,7 @@ class AnthropicProvider(BaseLLMProvider):
         self, input_tokens: int, output_tokens: int, model: str
     ) -> float:
         """Calculate cost based on token usage."""
-        pricing = self.PRICING.get(model)
-        if not pricing:
-            # Default to Sonnet pricing if model not found
-            pricing = self.PRICING["claude-sonnet-4-5-20250929"]
+        pricing = self.PRICING.get(model, self.PRICING["claude-sonnet-4-5-20250929"])
 
         input_cost = (input_tokens / 1_000_000) * pricing["input"]
         output_cost = (output_tokens / 1_000_000) * pricing["output"]
@@ -153,12 +149,8 @@ class AnthropicProvider(BaseLLMProvider):
     def estimate_cost(self, tokens: int, model: str) -> float:
         """Estimate cost for given token count."""
         pricing = self.PRICING.get(model, self.PRICING["claude-sonnet-4-5-20250929"])
-        # Assume 50/50 split between input and output
         return (tokens / 1_000_000) * (pricing["input"] + pricing["output"]) / 2
 
     def count_tokens(self, text: str, model: str) -> int:
-        """
-        Approximate token count for Claude.
-        Claude uses ~4 characters per token on average.
-        """
+        """Approximate token count for Claude (~4 chars per token)."""
         return len(text) // 4

@@ -1,7 +1,6 @@
-# central settings loader
-from pydantic import ConfigDict, Field
-from pydantic_settings import BaseSettings
-from typing import Optional, List
+from pydantic import Field
+from pydantic_settings import BaseSettings, SettingsConfigDict
+from typing import Optional, List, Literal
 
 from dotenv import load_dotenv
 
@@ -11,18 +10,20 @@ load_dotenv()
 class Settings(BaseSettings):
     """Application settings loaded from environment variables."""
 
-    # pydantic Settings model_config; narrow mypy complaint with explicit ignore
-    model_config = ConfigDict(
+    model_config = SettingsConfigDict(
         env_file=".env",
         case_sensitive=False,
-    )  # type: ignore[assignment]
+    )
 
     # App settings
     app_name: str = "AI Support Agent"
+    app_version: str = Field(default="1.0.0")
     app_env: str = Field(default="development")
     debug: bool = Field(default=False)
+    host: str = Field(default="0.0.0.0")
+    port: int = Field(default=8000)
     api_key: Optional[str] = Field(default=None)
-    allowed_origins: List[str] = Field(default=[])
+    allowed_origins: List[str] = Field(default_factory=list)
 
     # Rate limiting
     rate_limit_enabled: bool = Field(default=True)
@@ -33,8 +34,8 @@ class Settings(BaseSettings):
     anthropic_api_key: Optional[str] = Field(default=None)
     default_model: str = Field(default="gpt-4o-mini")
     fallback_model: str = Field(default="claude-3-haiku")
-    default_llm_provider: str = Field(default="openai")
-    fallback_provider: Optional[str] = Field(default="anthropic")
+    default_llm_provider: Literal["openai", "anthropic"] = "openai"
+    fallback_provider: Optional[Literal["openai", "anthropic"]] = "anthropic"
     llm_routing_strategy: str = Field(default="cost")
 
     # Memory settings
@@ -61,11 +62,6 @@ class Settings(BaseSettings):
         return self.app_env.lower() == "production"
 
     def validate_production(self) -> None:
-        """
-        Validates that production settings are safe.
-        Raises ValueError if unsafe defaults are detected in production mode.
-        Called during application startup.
-        """
         if not self.is_production:
             return
 
@@ -76,7 +72,7 @@ class Settings(BaseSettings):
 
         if not self.allowed_origins or "*" in self.allowed_origins:
             errors.append(
-                "ALLOWED_ORIGINS must be explicitly configured in production (not '*', not empty)"
+                "ALLOWED_ORIGINS must be explicitly configured in production"
             )
 
         if not self.rate_limit_enabled:
@@ -85,7 +81,7 @@ class Settings(BaseSettings):
         if self.api_key is None:
             errors.append("API_KEY must be set for production deployments")
 
-        if self.is_production and not (self.openai_api_key or self.anthropic_api_key):
+        if not (self.openai_api_key or self.anthropic_api_key):
             errors.append(
                 "At least one LLM provider API key must be configured in production"
             )
@@ -97,10 +93,6 @@ class Settings(BaseSettings):
             )
 
     def validate_llm_config(self) -> None:
-        """
-        Validates LLM configuration.
-        Ensures at least one provider is configured.
-        """
         if not self.openai_api_key and not self.anthropic_api_key:
             raise ValueError("At least one LLM provider API key must be configured")
 
@@ -116,5 +108,4 @@ class Settings(BaseSettings):
             raise ValueError(f"Invalid fallback_provider: {self.fallback_provider}")
 
 
-# Global settings instance
 settings = Settings()

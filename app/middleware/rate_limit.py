@@ -1,5 +1,3 @@
-# rate limiting middleware (stub)
-
 """Rate limiting middleware."""
 
 from starlette.middleware.base import BaseHTTPMiddleware
@@ -7,22 +5,23 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 from collections import defaultdict
 import time
+from typing import Dict, List
 from config import settings
 
 
 class RateLimitMiddleware(BaseHTTPMiddleware):
     """Simple in-memory rate limiter."""
 
-    def __init__(self, app, requests_per_minute: int = None):
+    def __init__(self, app, requests_per_minute: int | None = None):
         super().__init__(app)
-        self.requests_per_minute = (
+        self.requests_per_minute: int = (
             requests_per_minute or settings.rate_limit_requests_per_minute
         )
-        self.requests = defaultdict(list)
+        self.requests: Dict[str, List[float]] = defaultdict(list)
 
     async def dispatch(self, request: Request, call_next):
         # Get client identifier (IP or API key)
-        client_id = request.client.host
+        client_id: str = request.client.host if request.client else "unknown"
         if "x-api-key" in request.headers:
             client_id = request.headers["x-api-key"]
 

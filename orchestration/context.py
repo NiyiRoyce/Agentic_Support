@@ -232,11 +232,13 @@ class ContextBuilder:
             memory_manager: MemoryManager instance
 
         Returns:
-            OrchestrationContext (async, so caller must await)
+            OrchestrationContext
         """
-        # This is a helper - actual implementation would be async
-        # and called from the router
-        pass
+        # Build basic context
+        return ContextBuilder.from_request(
+            user_message=user_message,
+            session_id=session_id,
+        )
 
 
 class ContextEnricher:

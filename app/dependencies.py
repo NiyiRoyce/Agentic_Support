@@ -1,7 +1,4 @@
-# central dependencies (db, llm client, etc.)
-"""FastAPI dependency injection."""
-
-from typing import Optional
+from typing import Optional, Dict, List
 from fastapi import Depends, HTTPException, Header, status
 from functools import lru_cache
 
@@ -11,8 +8,11 @@ from llm import (
     AnthropicProvider,
     RouteConfig,
     RoutingStrategy,
+    LLMProvider,
+    BaseLLMProvider,
 )
 from memory import MemoryManager, InMemoryStore, RedisStore
+from memory.store import BaseMemoryStore
 from orchestration import OrchestrationRouter, PolicyManager
 from knowledge.vector_store import ChromaVectorStore
 from knowledge.embeddings import OpenAIEmbedder
@@ -20,7 +20,6 @@ from knowledge.retrieval import KnowledgeRetriever
 from config import settings
 
 
-# Global instances (initialized once)
 _llm_router: Optional[LLMRouter] = None
 _memory_manager: Optional[MemoryManager] = None
 _orchestration_router: Optional[OrchestrationRouter] = None
@@ -29,26 +28,19 @@ _knowledge_retriever: Optional[KnowledgeRetriever] = None
 
 @lru_cache()
 def get_llm_router() -> LLMRouter:
-    """
-    Get or create LLM router instance.
-
-    Returns:
-        LLMRouter instance
-    """
     global _llm_router
 
     if _llm_router is None:
-        # Initialize providers
-        providers = {}
+        providers: Dict[LLMProvider, BaseLLMProvider] = {}
 
         if settings.openai_api_key:
-            providers["openai"] = OpenAIProvider(
+            providers[LLMProvider.OPENAI] = OpenAIProvider(
                 api_key=settings.openai_api_key,
                 default_model=settings.default_model,
             )
 
         if settings.anthropic_api_key:
-            providers["anthropic"] = AnthropicProvider(
+            providers[LLMProvider.ANTHROPIC] = AnthropicProvider(
                 api_key=settings.anthropic_api_key,
                 default_model=settings.fallback_model,
             )
@@ -56,7 +48,6 @@ def get_llm_router() -> LLMRouter:
         if not providers:
             raise RuntimeError("No LLM providers configured")
 
-        # Create router with configuration
         strategy_map = {
             "cost": RoutingStrategy.COST,
             "latency": RoutingStrategy.LATENCY,
@@ -64,16 +55,29 @@ def get_llm_router() -> LLMRouter:
             "primary": RoutingStrategy.PRIMARY,
         }
 
+        fallback_providers: List[LLMProvider] = []
+        if (
+            settings.fallback_provider
+            and settings.fallback_provider != settings.default_llm_provider
+        ):
+            provider_map = {
+                "openai": LLMProvider.OPENAI,
+                "anthropic": LLMProvider.ANTHROPIC,
+            }
+            fallback_provider_enum = provider_map.get(settings.fallback_provider)
+            if fallback_provider_enum:
+                fallback_providers.append(fallback_provider_enum)
+
         _llm_router = LLMRouter(
             providers=providers,
             route_config=RouteConfig(
                 strategy=strategy_map.get(
                     settings.llm_routing_strategy, RoutingStrategy.QUALITY
                 ),
-                primary_provider=settings.default_llm_provider,
-                fallback_providers=[settings.fallback_provider]
-                if settings.fallback_provider != settings.default_llm_provider
-                else [],
+                primary_provider=provider_map.get(
+                    settings.default_llm_provider, LLMProvider.OPENAI
+                ),
+                fallback_providers=fallback_providers if fallback_providers else None,
             ),
         )
 
@@ -82,20 +86,15 @@ def get_llm_router() -> LLMRouter:
 
 @lru_cache()
 def get_memory_manager() -> MemoryManager:
-    """
-    Get or create memory manager instance.
-
-    Returns:
-        MemoryManager instance
-    """
     global _memory_manager
 
     if _memory_manager is None:
-        # Choose storage backend based on environment
+        store: BaseMemoryStore
+
         if settings.is_production and settings.redis_url:
             store = RedisStore(
                 redis_url=settings.redis_url,
-                ttl_seconds=7 * 86400,  # 7 days
+                ttl_seconds=7 * 86400,
             )
         else:
             store = InMemoryStore()
@@ -113,27 +112,18 @@ def get_memory_manager() -> MemoryManager:
 
 @lru_cache()
 def get_knowledge_retriever() -> KnowledgeRetriever:
-    """
-    Get or create knowledge retriever instance.
-
-    Returns:
-        KnowledgeRetriever instance
-    """
     global _knowledge_retriever
 
     if _knowledge_retriever is None:
-        # Initialize vector store
         vector_store = ChromaVectorStore(
             persist_directory=settings.rag_vector_store_path
         )
 
-        # Initialize embedder
         if not settings.openai_api_key:
             raise RuntimeError("OpenAI API key required for embeddings")
 
         embedder = OpenAIEmbedder(api_key=settings.openai_api_key)
 
-        # Create retriever
         _knowledge_retriever = KnowledgeRetriever(
             vector_store=vector_store,
             embedder=embedder,
@@ -146,12 +136,6 @@ def get_knowledge_retriever() -> KnowledgeRetriever:
 
 @lru_cache()
 def get_orchestration_router() -> OrchestrationRouter:
-    """
-    Get or create orchestration router instance.
-
-    Returns:
-        OrchestrationRouter instance
-    """
     global _orchestration_router
 
     if _orchestration_router is None:
@@ -168,106 +152,30 @@ def get_orchestration_router() -> OrchestrationRouter:
 async def verify_api_key(
     x_api_key: Optional[str] = Header(None, alias="X-API-Key"),
 ) -> str:
-    """
-    Verify API key from header.
-
-    Args:
-        x_api_key: API key from X-API-Key header
-
-    Returns:
-        Verified API key
-
-    Raises:
-        HTTPException: If API key is missing or invalid
-    """
-    # Skip in development
     if settings.is_development:
         return "dev_key"
 
     if not settings.api_key:
-        # No API key configured, skip verification
         return "no_key_configured"
 
     if not x_api_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="API key is missing",
-            headers={"WWW-Authenticate": "ApiKey"},
         )
 
     if x_api_key != settings.api_key:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="Invalid API key",
-            headers={"WWW-Authenticate": "ApiKey"},
         )
 
     return x_api_key
 
 
-async def get_current_user_id(
-    x_user_id: Optional[str] = Header(None, alias="X-User-Id"),
-) -> Optional[str]:
-    """
-    Extract user ID from header.
-
-    Args:
-        x_user_id: User ID from X-User-Id header
-
-    Returns:
-        User ID or None
-    """
-    return x_user_id
-
-
-async def get_session_id(
-    x_session_id: Optional[str] = Header(None, alias="X-Session-Id"),
-) -> Optional[str]:
-    """
-    Extract session ID from header.
-
-    Args:
-        x_session_id: Session ID from X-Session-Id header
-
-    Returns:
-        Session ID or None
-    """
-    return x_session_id
-
-
-# Dependency combinations
-async def get_authenticated_user(
-    api_key: str = Depends(verify_api_key),
-    user_id: Optional[str] = Depends(get_current_user_id),
-) -> Optional[str]:
-    """
-    Get authenticated user ID.
-
-    Args:
-        api_key: Verified API key
-        user_id: User ID from header
-
-    Returns:
-        User ID or None
-    """
-    return user_id
-
-
-async def get_request_context(
-    user_id: Optional[str] = Depends(get_current_user_id),
-    session_id: Optional[str] = Depends(get_session_id),
-) -> dict:
-    """
-    Build request context from headers.
-
-    Args:
-        user_id: User ID from header
-        session_id: Session ID from header
-
-    Returns:
-        Request context dictionary
-    """
+async def get_request_context() -> Dict[str, str]:
+    """Get request context for tracking."""
     return {
-        "user_id": user_id,
-        "session_id": session_id,
+        "app_name": settings.app_name,
+        "app_env": settings.app_env,
     }

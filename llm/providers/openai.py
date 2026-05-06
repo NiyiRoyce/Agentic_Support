@@ -1,6 +1,6 @@
 """OpenAI LLM provider implementation."""
 
-from typing import List, Optional
+from typing import List, Optional, Any, Dict, cast
 import tiktoken
 from openai import AsyncOpenAI, OpenAIError
 
@@ -16,7 +16,7 @@ from llm.providers.base import (
 class OpenAIProvider(BaseLLMProvider):
     """OpenAI API provider."""
 
-    # Pricing per 1M tokens (as of 2024)
+    # Pricing per 1M tokens
     PRICING = {
         "gpt-4o": {"input": 2.50, "output": 10.00},
         "gpt-4o-mini": {"input": 0.15, "output": 0.60},
@@ -38,48 +38,50 @@ class OpenAIProvider(BaseLLMProvider):
         cfg = self._create_default_config(config)
 
         try:
-            # Convert messages to OpenAI format
-            openai_messages = [
-                {"role": msg.role, "content": msg.content} for msg in messages
-            ]
-
-            # Build request params
-            params = {
-                "model": cfg.model,
-                "messages": openai_messages,
-                "temperature": cfg.temperature,
-                "max_tokens": cfg.max_tokens,
-                "top_p": cfg.top_p,
-                "frequency_penalty": cfg.frequency_penalty,
-                "presence_penalty": cfg.presence_penalty,
-                "timeout": cfg.timeout,
-            }
-
-            if cfg.stop_sequences:
-                params["stop"] = cfg.stop_sequences
-
-            if cfg.json_mode:
-                params["response_format"] = {"type": "json_object"}
-
-            # Make API call
-            response = await self.client.chat.completions.create(
-                model=cfg.model,
-                messages=openai_messages,
-                temperature=cfg.temperature,
-                max_tokens=cfg.max_tokens,
-                top_p=cfg.top_p,
-                frequency_penalty=cfg.frequency_penalty,
-                presence_penalty=cfg.presence_penalty,
-                timeout=cfg.timeout,
-                stop=cfg.stop_sequences if cfg.stop_sequences else None,
-                response_format={"type": "json_object"} if cfg.json_mode else None,
+            # Convert messages to OpenAI-compatible format
+            openai_messages = cast(
+                List[Dict[str, str]],
+                [{"role": msg.role, "content": msg.content} for msg in messages],
             )
 
-            # Extract usage
+            # Build kwargs safely (avoid passing None)
+            kwargs: Dict[str, Any] = {
+                "model": cfg.model,
+                "messages": openai_messages,
+            }
+
+            if cfg.temperature is not None:
+                kwargs["temperature"] = cfg.temperature
+
+            if cfg.max_tokens is not None:
+                kwargs["max_tokens"] = cfg.max_tokens
+
+            if cfg.top_p is not None:
+                kwargs["top_p"] = cfg.top_p
+
+            if cfg.frequency_penalty is not None:
+                kwargs["frequency_penalty"] = cfg.frequency_penalty
+
+            if cfg.presence_penalty is not None:
+                kwargs["presence_penalty"] = cfg.presence_penalty
+
+            if cfg.timeout is not None:
+                kwargs["timeout"] = cfg.timeout
+
+            if cfg.stop_sequences:
+                kwargs["stop"] = cfg.stop_sequences
+
+            if cfg.json_mode:
+                kwargs["response_format"] = {"type": "json_object"}
+
+            # API call
+            response = await self.client.chat.completions.create(**kwargs)
+
+            # Extract usage safely
             usage = response.usage
-            tokens_used = usage.total_tokens
-            input_tokens = usage.prompt_tokens
-            output_tokens = usage.completion_tokens
+            input_tokens = usage.prompt_tokens if usage else 0
+            output_tokens = usage.completion_tokens if usage else 0
+            tokens_used = usage.total_tokens if usage else 0
 
             # Calculate cost
             cost = self._calculate_cost(
@@ -89,7 +91,7 @@ class OpenAIProvider(BaseLLMProvider):
             )
 
             return LLMResponse(
-                content=response.choices[0].message.content,
+                content=response.choices[0].message.content or "",
                 model=cfg.model,
                 provider=self.provider_name,
                 tokens_used=tokens_used,
@@ -130,10 +132,7 @@ class OpenAIProvider(BaseLLMProvider):
         self, input_tokens: int, output_tokens: int, model: str
     ) -> float:
         """Calculate cost based on token usage."""
-        pricing = self.PRICING.get(model)
-        if not pricing:
-            # Default to gpt-4o pricing if model not found
-            pricing = self.PRICING["gpt-4o"]
+        pricing = self.PRICING.get(model, self.PRICING["gpt-4o"])
 
         input_cost = (input_tokens / 1_000_000) * pricing["input"]
         output_cost = (output_tokens / 1_000_000) * pricing["output"]
@@ -142,7 +141,6 @@ class OpenAIProvider(BaseLLMProvider):
     def estimate_cost(self, tokens: int, model: str) -> float:
         """Estimate cost for given token count."""
         pricing = self.PRICING.get(model, self.PRICING["gpt-4o"])
-        # Assume 50/50 split between input and output
         return (tokens / 1_000_000) * (pricing["input"] + pricing["output"]) / 2
 
     def count_tokens(self, text: str, model: str) -> int:
@@ -150,7 +148,6 @@ class OpenAIProvider(BaseLLMProvider):
         try:
             encoding = tiktoken.encoding_for_model(model)
         except KeyError:
-            # Default to cl100k_base for unknown models
             encoding = tiktoken.get_encoding("cl100k_base")
 
         return len(encoding.encode(text))

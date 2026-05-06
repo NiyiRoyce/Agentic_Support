@@ -133,8 +133,11 @@ class HealthResponse(BaseModel):
     timestamp: str = Field(..., description="Health check timestamp")
     version: str = Field(..., description="API version")
     environment: str = Field(..., description="Environment (dev/prod)")
-    services: Optional[Dict[str, str]] = Field(
+    services: Optional[Dict[str, Any]] = Field(
         None, description="Service health status"
+    )
+    errors: Optional[Dict[str, str]] = Field(
+        None, description="Error details if applicable"
     )
 
     model_config = ConfigDict(
