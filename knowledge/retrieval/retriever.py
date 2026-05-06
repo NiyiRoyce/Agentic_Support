@@ -1,6 +1,6 @@
 """Knowledge base retrieval service."""
 
-from typing import List, Dict, Any, Optional, cast
+from typing import List, Dict, Any, Optional
 
 from knowledge.vector_store import VectorStore, Document
 from knowledge.embeddings import Embedder

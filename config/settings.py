@@ -71,9 +71,7 @@ class Settings(BaseSettings):
             errors.append("DEBUG mode cannot be enabled in production (debug=True)")
 
         if not self.allowed_origins or "*" in self.allowed_origins:
-            errors.append(
-                "ALLOWED_ORIGINS must be explicitly configured in production"
-            )
+            errors.append("ALLOWED_ORIGINS must be explicitly configured in production")
 
         if not self.rate_limit_enabled:
             errors.append("RATE_LIMIT_ENABLED must be True in production")

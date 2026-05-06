@@ -107,7 +107,7 @@ class ChromaVectorStore(VectorStore):
                     continue
 
                 doc_content = documents[i] or ""
-                
+
                 # Convert metadata Mapping to dict for compatibility
                 metadata: Dict[str, Any] = {}
                 if metadatas[i] is not None:
@@ -156,8 +156,7 @@ class ChromaVectorStore(VectorStore):
     async def clear(self) -> bool:
         try:
             await asyncio.get_running_loop().run_in_executor(
-                None,
-                lambda: self.collection.delete()
+                None, lambda: self.collection.delete()
             )
             return True
         except Exception as e:
@@ -193,7 +192,7 @@ class ChromaVectorStore(VectorStore):
                     continue
 
                 doc_content = docs[i] or ""
-                
+
                 # Convert metadata Mapping to dict for compatibility
                 metadata: Dict[str, Any] = {}
                 if metas[i] is not None:

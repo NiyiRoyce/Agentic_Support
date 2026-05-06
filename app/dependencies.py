@@ -1,5 +1,5 @@
 from typing import Optional, Dict, List
-from fastapi import Depends, HTTPException, Header, status
+from fastapi import HTTPException, Header, status
 from functools import lru_cache
 
 from llm import (

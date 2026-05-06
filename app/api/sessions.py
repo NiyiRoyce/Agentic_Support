@@ -161,7 +161,7 @@ async def update_session(
 
         # Fetch updated session
         updated_session = await memory.get_session(session_id)
-        
+
         # Guard against None session
         if not updated_session:
             raise HTTPException(
@@ -173,8 +173,12 @@ async def update_session(
             success=True,
             session_id=updated_session.session_id,
             user_id=updated_session.user_id,
-            created_at=updated_session.created_at.isoformat() if updated_session.created_at else None,
-            updated_at=updated_session.updated_at.isoformat() if updated_session.updated_at else None,
+            created_at=updated_session.created_at.isoformat()
+            if updated_session.created_at
+            else None,
+            updated_at=updated_session.updated_at.isoformat()
+            if updated_session.updated_at
+            else None,
             message_count=len(updated_session.messages),
             metadata=updated_session.metadata,
         )
