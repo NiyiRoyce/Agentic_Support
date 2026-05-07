@@ -1,97 +1,110 @@
 # AI Support Agent
 
-Opinionated scaffold for an AI-driven customer support agent (ai-support-agent).
+A modular Python FastAPI scaffold for an AI-driven customer support agent. This repository is designed to support conversational workflows, knowledge retrieval, agent orchestration, and external tool integrations.
 
-Overview
--	Purpose: Provide a modular, production-minded Python/ FastAPI project layout for building conversational support agents that orchestrate LLMs, knowledge retrieval (RAG), and external tools (Shopify, Helpdesk, Notifications).
--	Goals: clear separation of concerns, testable agents, pluggable LLM providers, and observability.
+## What this repo contains
+
+- `main.py` — application entrypoint
+- `app/` — FastAPI app, API routes, middleware, schemas, dependency wiring
+- `agents/` — specialized agents for intent, knowledge, orders, tickets, escalation
+- `domain/` — business models and rules for orders, tickets, users, and policies
+- `orchestration/` — routing, execution planning, ambiguity handling, and confidence scoring
+- `execution/` — dispatcher, validators, retries, circuit breakers, tool invocations, workflow execution
+- `knowledge/` — document ingestion, chunking, embeddings, retrieval, and vector store adapters
+- `llm/` — LLM provider routing, fallback logic, prompts, and guardrails
+- `memory/` — session/context memory manager, store, summarizer, and validation
+- `observability/` — logging, tracing, metrics, cost tracking, and alerting helpers
+- `events/` — event publisher/consumer support and event schemas
+- `config/` — YAML configuration for LLMs, RAG, tools, and rollout flags
+- `scripts/` — utility scripts for ingestion, index rebuilds, backfills, and chaos testing
+- `tests/` — test suites for unit, integration, end-to-end, and chaos testing
+- `docs/` — documentation, runbooks, deployment guides, and design notes
 
 ## Documentation
 
-- [Architecture](docs/architecture.md) - System design and components
-- [API Reference](docs/api.md) - API endpoints and schemas
-- [Deployment](docs/deployment.md) - Production deployment guide
-- [Monitoring](docs/monitoring.md) - Observability and alerting
-- [Incident Response](docs/incident_response.md) - Incident handling procedures
-- [Cost Management](docs/cost_management.md) - Cost monitoring and optimization
-- [Technical Design](docs/TECHNICAL_DESIGN.md) - Detailed technical specifications
+- [Deployment](docs/deployment.md) — deployment and operational guidance
+- [Monitoring](docs/monitoring.md) — observability and alerting practices
+- [Incident Response](docs/incident_response.md) — incident handling and response playbooks
+- [Failure Scenarios](docs/failure_scenarios.md) — expected failure modes and mitigation
+- [Cost Management](docs/cost_management.md) — cost monitoring and optimization
+- [Technical Design](docs/technical_design.md) — repository design and implementation details
+- `docs/sample/getting_started.txt` — example onboarding and usage notes
 
-Quickstart
--	Copy environment variables from `.env.example` to `.env` and set secrets (e.g., `OPENAI_API_KEY`).
--	Install dependencies:
+## Quick start
+
+1. Copy environment variables from `.env.example` to `.env`
+2. Set required secrets (for example, `OPENAI_API_KEY`)
+3. Install dependencies:
 
 ```bash
 python -m pip install -r requirements.txt
 ```
 
--	Run locally:
+4. Run locally:
 
 ```bash
 python main.py
-# or with uvicorn
+```
+
+or with Uvicorn:
+
+```bash
 uvicorn main:app --reload --port 8000
 ```
 
--	Docker (build & run):
+5. Run with Docker:
 
 ```bash
 docker build -t ai-support-agent .
 docker run -p 8000:80 --env-file .env ai-support-agent
 ```
 
-Project Layout (top-level)
+## Repository structure
+
 ```
 ├── .env.example             # example environment variables
-├── .gitignore
-├── README.md                # this file
-├── requirements.txt         # pip deps for the app
-├── Dockerfile
-├── docker-compose.yml
-├── pyproject.toml
-├── main.py                  # app entrypoint
+├── docker-compose.yml       # container composition for local or staging environments
+├── Dockerfile               # Docker image build configuration
+├── main.py                  # application entrypoint
+├── pyproject.toml           # project metadata and dependency settings
+├── requirements.txt         # runtime and development dependencies
+├── README.md                # repository overview and usage guide
+├── app/                     # FastAPI application, routers, middleware, schemas
+├── agents/                  # modular agent implementations and prompts
+├── config/                  # YAML configuration for LLMs, tools, and rollout flags
+├── domain/                  # domain models, business logic, policies
+├── execution/               # orchestration, dispatch, retries, validators, workflows
+├── events/                  # event schemas, publisher, consumer support
+├── knowledge/               # ingestion, embeddings, retrieval, vector stores
+├── llm/                     # LLM routing, fallback, provider integrations, guardrails
+├── memory/                  # session memory store, summarization, validation
+├── observability/           # logging, metrics, tracing, alerting
+├── scripts/                 # CLI helpers and maintenance scripts
+├── tests/                   # unit, integration, e2e, and chaos tests
+└── docs/                    # architecture, deployment, incident, and cost docs
 ```
-High-level packages
 
-- `app/` — HTTP layer, routers, middleware, pydantic schemas, dependency wiring.
-  - `app/main.py` exposes `create_app()` building FastAPI and registering routes.
+## Key concepts
 
-- `domain/` — Pure business rules and domain models (orders, tickets, users, policies).
+- `app/` is the HTTP and API layer, including middleware, request validation, and route wiring.
+- `agents/` contains capability-specific agents that define prompts, schemas, and logic for conversational behavior.
+- `domain/` holds pure business logic with zero external IO.
+- `orchestration/` decides which agent runs and how execution is planned.
+- `execution/` executes planned actions with retries, circuit breakers, and tool integrations.
+- `knowledge/` manages document ingestion and retrieval for RAG-style knowledge access.
+- `llm/` centralizes LLM provider selection, fallback behavior, prompt templates, and safety guardrails.
+- `memory/` maintains conversational context and produces summaries for longer sessions.
+- `observability/` captures telemetry, logs, tracing, and cost metrics.
 
-- `orchestration/` — Intent routing, execution planning, ambiguity resolution, and confidence scoring.
+## Notes
 
-- `agents/` — Agent implementations grouped by capability (intent, knowledge, orders, tickets, escalation). Each agent contains `agent.py`, `prompts.py`, and `schemas.py`.
+- This repo is intended as a production-minded scaffold for AI support workflows.
+- The codebase is organized to separate API, business logic, agent behavior, orchestration, and retrieval.
+- The `docs/` folder contains operational and design documentation for developers and operators.
 
-- `execution/` — Dispatcher, validators, retries, circuit breaker, external tool wrappers (Shopify, helpdesk, notifications) and workflow handlers.
+## Next steps
 
-- `knowledge/` — Document ingestion, chunking, embeddings, retrieval, vector store adapters, and freshness rules.
-
-- `llm/` — LLM routing, fallbacks, provider integrations, prompts, and guardrails (json validation, content filtering, retry/degradation strategies).
-
-- `memory/` — Session/context memory manager, store, summarizer, and validators.
-
-- `observability/` — Logger, tracer, metrics, cost tracker, and alerting helpers.
-
-- `events/` — Optional event publisher/consumer layer and event schemas.
-
-- `config/` — YAML configs for LLMs, RAG, tools, and rollout flags.
-
-- `scripts/` — Helpful CLI scripts (ingest docs, rebuild index, backfill embeddings, chaos tests).
-
-- `tests/` — Unit, integration, e2e and chaos test suites.
-
-- `docs/` — Architecture, API, deployment, runbooks and failure scenarios.
-
-Design notes & conventions
--	Keep `domain/` pure: no IO, only deterministic business logic and policies.
--	Agents are small, single-responsibility units: they take structured inputs and return structured outputs.
--	Execution layer handles retries, circuit-breaking, and idempotency.
--	Knowledge layer enforces freshness rules before serving RAG results.
--	LLM calls are routed through `llm/router.py` to allow provider failover and guardrails.
--	Use `pydantic` models (`app/schemas`) for all external and internal interfaces.
--	Add observability hooks in entrypoints (fastapi middleware, dispatcher, and agent runners).
-
-Next steps / TODO
-- Implement concrete LLM provider connectors in `llm/providers/`.
-- Wire agents into `orchestration/router.py` and build `execution/dispatcher.py` flows.
-- Add test coverage under `tests/unit` for domain logic and `tests/integration` for end-to-end flows.
-- Configure CI to run linting and tests.
+- Complete LLM provider connectors and integrations under `llm/`
+- Wire agent workflows through `orchestration/` and `execution/`
+- Expand tests in `tests/unit`, `tests/integration`, and `tests/e2e`
+- Add CI/CD automation for linting, testing, and deployment
