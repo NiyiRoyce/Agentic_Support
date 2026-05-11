@@ -40,7 +40,7 @@ This repository is protected by secret-scanning pre-commit hooks. These will rej
 - All dependencies are regularly scanned for known vulnerabilities
 
 ### Reporting Security Issues
-If you discover a security vulnerability, please email security@company.com with:
+If you discover a security vulnerability, please email niyiroyce@gmail.com with:
 - Description of the issue
 - Steps to reproduce
 - Potential impact
